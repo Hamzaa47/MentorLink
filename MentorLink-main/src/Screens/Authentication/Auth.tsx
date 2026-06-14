@@ -5,7 +5,7 @@ import { supabase } from "../../supabase-client";
 
 import type { ChangeEvent } from "react";
 import style from "./Auth.module.css";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 
 type Props = {
   onClose: () => void;
@@ -23,9 +23,9 @@ function Auth({ onClose }: Props) {
   const navigate = useNavigate();
 
   function isValidStudentEmail(email: string) {
-  const regex = /^(2[0-9])ntucsfl\d{4}@student\.ntu\.edu\.pk$/;
-  return regex.test(email);
-}
+    const regex = /^(2[0-9])ntucsfl\d{4}@student\.ntu\.edu\.pk$/;
+    return regex.test(email);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,14 +33,13 @@ function Auth({ onClose }: Props) {
     setErrorMessage("");
 
     if (isSignUp) {
-
-    if (!isValidStudentEmail(email)) {
-    setErrorMessage(
-      "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
-    );
-    setLoading(false);
-    return;
-  }
+      if (!isValidStudentEmail(email)) {
+        setErrorMessage(
+          "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
+        );
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -57,7 +56,7 @@ function Auth({ onClose }: Props) {
       }
 
       if (data?.user?.identities?.length === 0) {
-        setErrorMessage("Email already registered.Please sign in.");
+        setErrorMessage("Email already registered. Please sign in.");
         setLoading(false);
         return;
       }
@@ -85,80 +84,120 @@ function Auth({ onClose }: Props) {
       setLoading(false);
     }
   }
+
   return (
-    <>
-      <div className={style.loginContainer}>
-        <div className={`${style.loginCard}`}>
-          <div className={style.closeBtn}>
-            <button onClick={onClose}>X</button>
-          </div>
-          <h2>MentorLink</h2>
-
-          <form onSubmit={handleSubmit}>
-            <div className={style.inputForm}>
-              <input
-                type="email"
-                placeholder="e.g. 23ntucsfl1000@student.edu.pk"
-                value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setEmail(e.target.value)
-                }
-              />
-
-              <div className={style.passwordWrapper}>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setPassword(e.target.value)
-                  }
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((p) => !p)}
-                >
-                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                </button>
-              </div>
-
-              {errorMessage && <p className={style.error}>{errorMessage}</p>}
-
-              <button
-                className={loading ? "spinner" : style.signInButton}
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="spinnner"></span>
-                ) : isSignUp ? (
-                  "Sign Up"
-                ) : (
-                  "Sign In"
-                )}
-              </button>
-            </div>
-
-            <div className={style.footer}>
-              <small>
-                {isSignUp
-                  ? "Already have an account?"
-                  : "Don't have an account?"}
-              </small>
-
-              <button
-                type="button"
-                className={style.signInButton}
-                onClick={() => setIsSignUp((p) => !p)}
-              >
-                {isSignUp ? "Sign In" : "Sign Up"}
-              </button>
-            </div>
-          </form>
+    <div className={style.overlay}>
+      <div className={style.loginCard}>
+        <div className={style.closeBtn}>
+          <button type="button" onClick={onClose} aria-label="Close modal">
+            <X size={16} />
+          </button>
         </div>
+        
+        <h2 className={style.title}>MentorLink</h2>
+        
+        <p className={style.subtitle}>
+          {isSignUp 
+            ? "Create your student account to connect with mentors." 
+            : "Sign in to your student account to connect with mentors."}
+        </p>
+
+        {/* Tab Switcher */}
+        <div className={style.tabContainer}>
+          <button 
+            type="button" 
+            className={`${style.tab} ${!isSignUp ? style.activeTab : style.inactiveTab}`}
+            onClick={() => {
+              setIsSignUp(false);
+              setErrorMessage("");
+            }}
+          >
+            Sign In
+          </button>
+          <button 
+            type="button" 
+            className={`${style.tab} ${isSignUp ? style.activeTab : style.inactiveTab}`}
+            onClick={() => {
+              setIsSignUp(true);
+              setErrorMessage("");
+            }}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className={style.form}>
+          <div className={style.inputGroup}>
+            <label className={style.label}>Student Email</label>
+            <input
+              className={style.input}
+              type="email"
+              placeholder="23ntucsfl1003@student.ntu.edu.pk"
+              value={email}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              required
+            />
+          </div>
+
+          <div className={style.inputGroup}>
+            <label className={style.label}>Password</label>
+            <div className={style.passwordWrapper}>
+              <input
+                className={`${style.input} ${style.passwordInput}`}
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••••••••••••••••••"
+                value={password}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setPassword(e.target.value)
+                }
+                required
+              />
+              <button
+                className={style.togglePassword}
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errorMessage && <p className={style.error}>{errorMessage}</p>}
+          </div>
+
+          <button
+            className={style.submitBtn}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? (
+              <span className={style.spinner}></span>
+            ) : isSignUp ? (
+              "Create Account"
+            ) : (
+              "Sign In"
+            )}
+          </button>
+
+          <div className={style.footer}>
+            <span>
+              {isSignUp ? "Already have an account?" : "Don't have an account?"}
+            </span>
+            <button
+              type="button"
+              className={style.footerBtn}
+              onClick={() => {
+                setIsSignUp((p) => !p);
+                setErrorMessage("");
+              }}
+            >
+              {isSignUp ? "Sign In" : "Sign Up"}
+            </button>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 }
 
