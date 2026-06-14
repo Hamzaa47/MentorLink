@@ -22,11 +22,13 @@ function MentorProfileCompletion() {
 
   const signedUrl = useSignedImage(profileImage);
 
-  // ================= GET USER & PROFILE =================
   useEffect(() => {
     const getProfileData = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      const { data: userData, error } = await supabase.auth.getUser();
+      if (error || !userData.user) {
+        navigate("/", { replace: true });
+        return;
+      }
 
       setEmail(userData.user.email || "");
 
@@ -197,6 +199,7 @@ function MentorProfileCompletion() {
               <SubjectSearch
                 onChange={setExpertSubjects}
                 initialSubjects={expertSubjects}
+                maxSubjects={3}
               />
             </div>
             {expertSubjects.length !== 3 && (

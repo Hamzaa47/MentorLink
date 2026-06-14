@@ -31,13 +31,17 @@ function Profile() {
   // ================= GET USER =================
   useEffect(() => {
     const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        navigate("/", { replace: true });
+        return;
+      }
       if (data.user?.email) {
         setEmail(data.user.email);
       }
     };
     getUser();
-  }, []);
+  }, [navigate]);
 
   // ================= GET PROFILE + SUBJECTS =================
   useEffect(() => {

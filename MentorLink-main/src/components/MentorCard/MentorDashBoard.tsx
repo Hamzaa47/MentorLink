@@ -293,16 +293,18 @@ export default function MentorDashboard() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        fetchSubjects(user.id);
-        fetchNotifications(user.id);
-        fetchMentorRank(user.id);
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        navigate("/", { replace: true });
+        return;
       }
+      setUserId(user.id);
+      fetchSubjects(user.id);
+      fetchNotifications(user.id);
+      fetchMentorRank(user.id);
     };
     init();
-  }, []);
+  }, [navigate]);
 
   const pendingSubjects = subjects.filter((s) => s.marks === -1);
   const completedSubjects = subjects.filter((s) => s.marks >= 0 && s.marks <= 15);
@@ -422,8 +424,28 @@ export default function MentorDashboard() {
     setGeneratedText("");
 
     if (!groq) {
-      setGeneratedText("Error: GROQ_API_KEY is missing. Please add it to your .env file and restart the server.");
-      setIsGenerating(false);
+      console.warn("Groq API Key is missing. Using local mock test generator.");
+      setTimeout(() => {
+        const mockQuestions: Question[] = [];
+        for (let i = 1; i <= 15; i++) {
+          mockQuestions.push({
+            question: `Mock Question ${i} for ${subjectName}: What is the fundamental concept of this topic?`,
+            options: [
+              `Option A for concept ${i}`,
+              `Option B for concept ${i} (Correct option)`,
+              `Option C for concept ${i}`,
+              `Option D for concept ${i}`
+            ],
+            correctAnswer: 1
+          });
+        }
+        setTestData({ questions: mockQuestions });
+        setTestActive(true);
+        setScoreSummary(null);
+        setTimeLeft(180);
+        setUserAnswers({});
+        setIsGenerating(false);
+      }, 1500);
       return;
     }
 

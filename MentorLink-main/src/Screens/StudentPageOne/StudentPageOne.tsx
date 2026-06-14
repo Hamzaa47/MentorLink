@@ -172,20 +172,26 @@ const StudentPageOne = () => {
         return;
       }
       const { data: authData, error } = await supabase.auth.getUser();
-      if (error || !authData?.user) return;
+      if (error || !authData?.user) {
+        navigate("/", { replace: true });
+        return;
+      }
 
       const { data, error: profileError } = await supabase
         .from("profile")
         .select("*")
         .eq("id", authData.user.id)
-        .single();
+        .maybeSingle();
 
-      if (profileError) return;
+      if (profileError || !data) {
+        navigate("/profile", { replace: true });
+        return;
+      }
       setProfile(data);
       setCache("profile", data);
     };
     fetchProfile();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const fetchMentorStatus = async () => {

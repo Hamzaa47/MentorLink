@@ -1,4 +1,5 @@
 // Custom client that redirects all queries to Express server
+import { clearCache } from "./utils/cache";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -221,6 +222,7 @@ export const supabase = {
       }
       localStorage.removeItem("sb-session");
       localStorage.removeItem("sb-user");
+      clearCache();
       triggerAuthChange("SIGNED_OUT", null);
       return { error: null };
     },

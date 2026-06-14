@@ -4,9 +4,10 @@ import style from "./SubjectSearch.module.css";
 type Props = {
   onChange: (subjects: string[]) => void;
   initialSubjects?: string[];
+  maxSubjects?: number;
 };
 
-function SubjectSearch({ onChange, initialSubjects = [] }: Props) {
+function SubjectSearch({ onChange, initialSubjects = [], maxSubjects = 100 }: Props) {
   const subjects = [
     "Fundamentals of Accounting",
     "Programming for Artificial Intelligence",
@@ -126,12 +127,12 @@ function SubjectSearch({ onChange, initialSubjects = [] }: Props) {
         ref={inputRef}
         placeholder={selectedSubject.length === 0 ? "e.g. Database" : ""}
         value={query}
-        disabled={selectedSubject.length === 3}
+        disabled={selectedSubject.length === maxSubjects}
         onChange={(e) => setQuery(e.target.value)}
         className={style["tag-input"]}
       />
 
-      {query && selectedSubject.length < 3 && (
+      {query && selectedSubject.length < maxSubjects && (
         <ul className={style.list}>
           {filteredSubjects.length > 0 ? (
             filteredSubjects.map((subject) => (

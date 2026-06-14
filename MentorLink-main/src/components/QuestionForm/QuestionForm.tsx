@@ -107,7 +107,8 @@ const AskQuestionForm = ({ isOpen, onClose }: Props) => {
     }
 
     if (!subjects.includes(subject)) {
-      console.error("Please select a valid subject from the list.");
+      setError("Please select a valid subject from the list.");
+      setLoading(false);
       return;
     }
 
