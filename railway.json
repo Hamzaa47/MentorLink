@@ -5,7 +5,7 @@
     "watchPatterns": ["MentorLink-main/server/**"]
   },
   "deploy": {
-    "startCommand": "cd MentorLink-main/server && npm install && node index.js",
+    "startCommand": "node MentorLink-main/server/index.js",
     "restartPolicyType": "ON_FAILURE"
   }
 }

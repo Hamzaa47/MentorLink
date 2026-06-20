@@ -421,9 +421,11 @@ export const supabase = {
         },
 
         getPublicUrl(filePath: string) {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://isxxzkcanajavlrietue.supabase.co";
+          const cleanUrl = supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl;
           return {
             data: {
-              publicUrl: `https://isxxzkcanajavlrietue.supabase.co/storage/v1/object/public/${bucket}/${filePath}`
+              publicUrl: `${cleanUrl}/storage/v1/object/public/${bucket}/${filePath}`
             }
           };
         },

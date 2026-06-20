@@ -44,30 +44,28 @@ Go to **Project Settings** -> **Environment Variables** and add the following ke
 ## 3. Backend Deployment (Railway)
 
 ### Project Configuration
-A root-level `railway.json` is configured in the repository root to automatically direct Railway to compile and execute the server in the nested directory:
+A root-level `package.json` and `railway.json` are configured in the repository root to automatically direct Railway to compile and execute the server in the nested directory.
 
+The root-level `package.json` manages workspace installation and scripts:
+- It defines a `postinstall` script: `"npm install --prefix MentorLink-main/server"` which installs backend dependencies during Railway's build phase.
+- It defines a `start` script: `"node MentorLink-main/server/index.js"` to run the backend server.
+
+The root-level `railway.json` specifies:
 ```json
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "watchPatterns": ["MentorLink-main/server/**"]
   },
   "deploy": {
-    "startCommand": "npm run start",
-    "restartPolicyType": "ON_FAILURE",
-    "numReplicas": 1,
-    "watchPaths": ["MentorLink-main/server/**"]
+    "startCommand": "node MentorLink-main/server/index.js",
+    "restartPolicyType": "ON_FAILURE"
   }
 }
 ```
 
-Wait, make sure that `MentorLink-main/server/package.json` has a `"start"` script:
-```json
-"scripts": {
-  "start": "node index.js",
-  "dev": "nodemon index.js"
-}
-```
+If you choose to set the **Root Directory** setting in Railway to `MentorLink-main`, the inner `railway.json` configuration will handle it automatically.
 
 ### Environment Variables on Railway
 In your Railway backend service dashboard, add the following variables:
