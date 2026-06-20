@@ -27,14 +27,32 @@ app.use(express.json());
 // Initialize Supabase Client
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+let supabase;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Missing SUPABASE_URL or SUPABASE_KEY in environment variables.");
-  process.exit(1);
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey);
+} else {
+  console.warn("WARNING: Missing SUPABASE_URL or SUPABASE_KEY in environment variables.");
 }
 
-// We use the supabase client to query database
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Root health check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    status: "online",
+    message: "MentorLink API is running!",
+    databaseConfigured: !!supabase
+  });
+});
+
+// Ensure Supabase is configured before handling any API requests
+app.use("/api", (req, res, next) => {
+  if (!supabase) {
+    return res.status(500).json({
+      error: "Backend database connection is not configured. Please add SUPABASE_URL and SUPABASE_KEY to your Railway environment variables."
+    });
+  }
+  next();
+});
 
 // Multer configuration for memory storage
 const upload = multer({
