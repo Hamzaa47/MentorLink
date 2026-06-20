@@ -5,7 +5,7 @@
   "scripts": {
     "install:server": "npm install --prefix MentorLink-main/server",
     "install:client": "npm install --prefix MentorLink-main",
-    "postinstall": "npm run install:server && npm run install:client",
+    "postinstall": "npm run install:server",
     "start:server": "node MentorLink-main/server/index.js",
     "start:client": "npm run dev --prefix MentorLink-main",
     "build:client": "npm run build --prefix MentorLink-main",
