@@ -24,7 +24,7 @@ function ConfirmEmail() {
       }
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   async function handleResendEmail() {
     setResendMessage("");

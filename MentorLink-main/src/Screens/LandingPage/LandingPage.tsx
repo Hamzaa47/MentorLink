@@ -12,7 +12,7 @@ import { supabase } from "../../supabase-client";
 
 const LandingPage = () => {
   const projectName = "MENTORLINK";
-  const userNumber = "12,567";
+  const userNumber = "3,500";
   const navigate = useNavigate();
   useScrollReveal();
   const [showAuth, setShowAuth] = useState(false);
@@ -161,34 +161,39 @@ const LandingPage = () => {
             <div className={style.innerLine}></div>
           </div>
 
-          <div className={`${style.statsSection} hidden`}>
-            <div className={style.statsContainer}>
-              <div className={`${style.statItem} hidden`}>
-                <p className={`${style.statNumber} ${style.statPrimary}`}>
-                  12k+
-                </p>
-                <p className={style.statLabel}>Students</p>
+          <div className={`${style.highlightsSection} hidden`}>
+            <h3 className={style.highlightsHeading}>Core Platform Features</h3>
+            <div className={style.highlightsGrid}>
+              <div className={`${style.highlightCard} hidden`}>
+                <div className={style.highlightIconWrapper} style={{ backgroundColor: "rgba(24, 95, 165, 0.1)", color: "var(--primary)" }}>
+                  🛡️
+                </div>
+                <h4 className={style.highlightTitle}>NTU Verified</h4>
+                <p className={style.highlightDescription}>Safe, exclusive network verified via student emails.</p>
               </div>
 
-              <div className={`${style.statItem} hidden`}>
-                <p className={`${style.statNumber} ${style.statSecondary}`}>
-                  3.4k+
-                </p>
-                <p className={style.statLabel}>Mentors</p>
+              <div className={`${style.highlightCard} hidden`}>
+                <div className={style.highlightIconWrapper} style={{ backgroundColor: "rgba(127, 119, 221, 0.1)", color: "var(--accent)" }}>
+                  🎯
+                </div>
+                <h4 className={style.highlightTitle}>Course Match</h4>
+                <p className={style.highlightDescription}>Connect with senior students who took your exact courses.</p>
               </div>
 
-              <div className={`${style.statItem} hidden`}>
-                <p className={`${style.statNumber} ${style.statTertiary}`}>
-                  98%
-                </p>
-                <p className={style.statLabel}>Satisfaction</p>
+              <div className={`${style.highlightCard} hidden`}>
+                <div className={style.highlightIconWrapper} style={{ backgroundColor: "rgba(239, 159, 39, 0.1)", color: "var(--highlight)" }}>
+                  💡
+                </div>
+                <h4 className={style.highlightTitle}>Quick Q&A</h4>
+                <p className={style.highlightDescription}>Post your academic questions and receive verified help.</p>
               </div>
 
-              <div className={`${style.statItem} hidden`}>
-                <p className={`${style.statNumber} ${style.statPrimary}`}>
-                  50+
-                </p>
-                <p className={style.statLabel}>Universities</p>
+              <div className={`${style.highlightCard} hidden`}>
+                <div className={style.highlightIconWrapper} style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", color: "var(--emerald)" }}>
+                  💬
+                </div>
+                <h4 className={style.highlightTitle}>Private DM</h4>
+                <p className={style.highlightDescription}>Start real-time chat with matched mentors instantly.</p>
               </div>
             </div>
           </div>

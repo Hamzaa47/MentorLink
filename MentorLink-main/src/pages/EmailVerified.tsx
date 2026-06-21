@@ -7,7 +7,11 @@ import style from "./EmailVerified.module.css";
 function ConfirmEmail() {
   const navigate = useNavigate();
   const [sessionReady, setSessionReady] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const error = queryParams.get("error");
+    return error ? "Link expired. Please request a new one." : "";
+  });
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -15,7 +19,6 @@ function ConfirmEmail() {
     const error = queryParams.get("error");
 
     if (error) {
-      setErrorMessage("Link expired. Please request a new one.");
       return;
     }
 

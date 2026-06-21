@@ -17,10 +17,11 @@ function UploadImage({ onUpload, currentImage, previewUrl }: Props) {
   const uploadedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (previewUrl) {
+    if (previewUrl && previewUrl !== preview) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreview(previewUrl);
     }
-  }, [previewUrl]);
+  }, [previewUrl, preview]);
   const handleFileChange = async (file: File | null) => {
     if (!file) return;
 

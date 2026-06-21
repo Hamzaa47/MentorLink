@@ -109,6 +109,7 @@
 }
 
 .searchInput {
+  box-sizing: border-box;
   width: 100%;
   max-width: 22rem;
   border-radius: 999px;
@@ -156,6 +157,11 @@
   .dashboardHeader {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .questionsSection {
+    padding: 1rem;
+    border-radius: 1.25rem;
   }
 
   .questionsToolbar {

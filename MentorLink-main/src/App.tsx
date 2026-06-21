@@ -13,6 +13,7 @@ import MentorDashboard from "./components/MentorCard/MentorDashBoard";
 import MentorProfile from "./Screens/MentorProfile/MentorProfile";
 import StudentDashboard from "./Screens/StudentDashboard/StudentDashboard";
 import QuestionDetail from "./Screens/QuestionDetail/QuestionDetail";
+import ChatWidget from "./components/Chat/ChatWidget";
 
 const App = () => {
   return (
@@ -31,6 +32,7 @@ const App = () => {
         <Route path="/mentor/:id" element={<MentorProfile />} />
         <Route path="/question/:id" element={<QuestionDetail />} />
       </Routes>
+      <ChatWidget />
     </BrowserRouter>
   );
 };

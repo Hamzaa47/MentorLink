@@ -18,7 +18,11 @@ type Question = {
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const switchingRef = useRef(false);
-  const [activeMode, setActiveMode] = useState<string | null>(null);
+
+  const [activeMode, setActiveMode] = useState<string | null>(() => {
+    const mode = sessionStorage.getItem("activeMode");
+    return mode || "student";
+  });
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,9 +37,12 @@ const StudentDashboard = () => {
       if (!mode) {
         sessionStorage.setItem("activeMode", "student");
       }
-      setActiveMode("student");
+      if (activeMode !== "student") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setActiveMode("student");
+      }
     }
-  }, [navigate]);
+  }, [navigate, activeMode]);
 
   useEffect(() => {
     // Push dummy state to capture back button/swipes if not already present
@@ -43,7 +50,7 @@ const StudentDashboard = () => {
       window.history.pushState({ isDummyDashboard: true }, "", window.location.href);
     }
 
-    const handlePopState = (event: PopStateEvent) => {
+    const handlePopState = () => {
       if (switchingRef.current) {
         navigate("/student", { replace: true });
         return;

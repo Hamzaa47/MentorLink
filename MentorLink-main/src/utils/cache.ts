@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Cache utility to store database query results and signed URLs in memory
 // to prevent reload of data when navigating between pages.
 

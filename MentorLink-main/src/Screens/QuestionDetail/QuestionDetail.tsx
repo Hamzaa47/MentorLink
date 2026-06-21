@@ -273,6 +273,8 @@ const QuestionDetail = () => {
     );
   }
 
+  const isQuestionAuthor = currentUserId === question.student_id;
+
   return (
     <div className={styles.pageContainer}>
       <div className={styles.contentWrapper}>
@@ -354,16 +356,16 @@ const QuestionDetail = () => {
             </div>
           ))}
 
-          {isMentor && (
+          {isQuestionAuthor || isMentor ? (
             <>
-              {!subjectTestReady ? (
+              {!isQuestionAuthor && (!subjectTestReady || mentorSubjectScore === null || (mentorSubjectScore / 15) * 100 < 70) ? (
                 <div className={styles.replyNotice}>
                   <p>
-                    You must complete the expert subject test for <strong>{question.subject}</strong> before replying.
+                    You must complete the expert subject test for <strong>{question.subject}</strong> and score at least 70% before replying.
                   </p>
                   <p style={{ marginTop: 8, color: '#e2e8f0' }}>
                     {mentorSubjectScore !== null
-                      ? `Current subject score: ${mentorSubjectScore} / 15`
+                      ? `Current subject score: ${mentorSubjectScore} / 15 (${Math.round((mentorSubjectScore / 15) * 100)}%)`
                       : 'No subject test completed yet.'}
                   </p>
                 </div>
@@ -371,7 +373,7 @@ const QuestionDetail = () => {
                 <div className={styles.replyForm}>
                   <textarea 
                     className={styles.replyInput}
-                    placeholder="Write your answer..."
+                    placeholder={isQuestionAuthor ? "Reply to your question or follow up..." : "Write your answer..."}
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                   />
@@ -385,8 +387,8 @@ const QuestionDetail = () => {
                 </div>
               )}
             </>
-          )}
-          {!isMentor && replies.length === 0 && (
+          ) : null}
+          {!isMentor && !isQuestionAuthor && replies.length === 0 && (
              <p style={{ color: '#888', fontStyle: 'italic' }}>No mentors have replied yet.</p>
           )}
         </div>

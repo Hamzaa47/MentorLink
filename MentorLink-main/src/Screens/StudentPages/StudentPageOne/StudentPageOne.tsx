@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./StudentPageOne.module.css";
 import userIcon from "../../../assets/userIcon.svg";
 const StudentPageOne = () => {
-  const projectName = "MentroLink";
+  const projectName = "MentorLink";
   const [open, setOpen] = useState(false);
   return (
     <div className={styles.TopContainer}>

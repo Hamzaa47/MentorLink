@@ -24,7 +24,7 @@ useEffect(() => {
     }
   );
   return () => subscription.unsubscribe();
-}, []);
+}, [navigate]);
 
   async function handleResendEmail() {
     setResendMessage("");

@@ -12,18 +12,18 @@ export function useSignedImage(path:string|null){
 
     useEffect(()=>{
         if(!path){
-            setUrl("");
+            setTimeout(() => setUrl(""), 0);
             return;
         }
 
         if (path.startsWith("http://") || path.startsWith("https://")) {
-            setUrl(path);
+            setTimeout(() => setUrl(path), 0);
             return;
         }
 
         const cachedUrl = getSignedUrlFromCache(path);
         if (cachedUrl) {
-            setUrl(cachedUrl);
+            setTimeout(() => setUrl(cachedUrl), 0);
             return;
         }
 

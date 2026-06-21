@@ -19,6 +19,7 @@ function MentorProfileCompletion() {
   const [description, setDescription] = useState("");
   const [expertSubjects, setExpertSubjects] = useState<string[]>([]);
   const [existingSubjects, setExistingSubjects] = useState<{ course_name: string; marks: number }[]>([]);
+  const [difficultSubjects, setDifficultSubjects] = useState<string[]>([]);
   const [mentorExists, setMentorExists] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -35,10 +36,16 @@ function MentorProfileCompletion() {
       setEmail(userData.user.email || "");
 
       // Fetch profile and existing mentor details
-      const [{ data: profileData, error: profileError }, { data: mentorData }, { data: subjectData }] = await Promise.all([
+      const [
+        { data: profileData, error: profileError },
+        { data: mentorData },
+        { data: subjectData },
+        { data: difficultSubjectData }
+      ] = await Promise.all([
         supabase.from("profile").select("*").eq("id", userData.user.id).single(),
         supabase.from("mentor").select("Description").eq("mentor_id", userData.user.id).single(),
         supabase.from("mentor_subjects").select("course_name").eq("mentor_id", userData.user.id),
+        supabase.from("student_subjects").select("course_name").eq("student_id", userData.user.id),
       ]);
 
       if (profileError) {
@@ -59,14 +66,22 @@ function MentorProfileCompletion() {
         setExistingSubjects(subjectData as { course_name: string; marks: number }[]);
         setExpertSubjects(
           subjectData
-            .map((item: any) => item.course_name)
+            .map((item: { course_name: string }) => item.course_name)
+            .filter(Boolean)
+        );
+      }
+
+      if (difficultSubjectData) {
+        setDifficultSubjects(
+          difficultSubjectData
+            .map((item: { course_name: string }) => item.course_name)
             .filter(Boolean)
         );
       }
     };
 
     getProfileData();
-  }, []);
+  }, [navigate]);
 
   // ================= SAVE MENTOR PROFILE =================
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -75,6 +90,17 @@ function MentorProfileCompletion() {
     
     if (expertSubjects.length !== 3) {
       setErrorMessage("Please select exactly 3 subjects.");
+      return;
+    }
+
+    const overlapping = expertSubjects.filter((subject) =>
+      difficultSubjects.includes(subject)
+    );
+
+    if (overlapping.length > 0) {
+      setErrorMessage(
+        `You cannot select "${overlapping.join(", ")}" as an expert subject because you marked it as a difficult subject during signup.`
+      );
       return;
     }
 
@@ -221,13 +247,22 @@ function MentorProfileCompletion() {
                 You must select exactly 3 subjects. (Selected: {expertSubjects.length})
               </p>
             )}
+            {expertSubjects.some((s) => difficultSubjects.includes(s)) && (
+              <p style={{ color: "#ff4d4f", fontSize: "12px", marginTop: "5px" }}>
+                You cannot select your difficult subjects ({difficultSubjects.filter(s => expertSubjects.includes(s)).join(", ")}) as expert subjects.
+              </p>
+            )}
           </div>
 
           {/* ERROR DISPLAY */}
           {errorMessage && <p className={style.error}>{errorMessage}</p>}
 
           {/* BUTTON */}
-          <button type="submit" className={style.submitBtn} disabled={loading || expertSubjects.length !== 3}>
+          <button
+            type="submit"
+            className={style.submitBtn}
+            disabled={loading || expertSubjects.length !== 3 || expertSubjects.some((s) => difficultSubjects.includes(s))}
+          >
             {loading ? "Saving..." : mentorExists ? "Update Mentor Profile" : "Save & Continue"}
           </button>
         </form>

@@ -1,7 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Custom client that redirects all queries to Express server
 import { clearCache } from "./utils/cache";
+import { createClient } from "@supabase/supabase-js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://isxxzkcanajavlrietue.supabase.co";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_QifhcxwPmmPSdxR66Qz_Ag_Cwgcvfpb";
+
+// Real client strictly for real-time WebSocket subscriptions
+export const realtimeSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function getLocalAccessToken(): string {
   const sessionStr = localStorage.getItem("sb-session");
@@ -9,7 +16,7 @@ function getLocalAccessToken(): string {
   try {
     const session = JSON.parse(sessionStr);
     return session?.access_token || "";
-  } catch (e) {
+  } catch {
     return "";
   }
 }
@@ -241,7 +248,7 @@ export const supabase = {
       if (userStr) {
         try {
           return { data: { user: JSON.parse(userStr) }, error: null };
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
@@ -283,7 +290,7 @@ export const supabase = {
       try {
         const session = JSON.parse(sessionStr);
         return { data: { session }, error: null };
-      } catch (e) {
+      } catch {
         return { data: { session: null }, error: null };
       }
     },
@@ -350,7 +357,7 @@ export const supabase = {
         try {
           const session = JSON.parse(sessionStr);
           callback("SIGNED_IN", session);
-        } catch (e) {
+        } catch {
           callback("SIGNED_OUT", null);
         }
       } else {
@@ -376,7 +383,7 @@ export const supabase = {
   storage: {
     from(bucket: string) {
       return {
-        async upload(filePath: string, file: File, options?: any) {
+        async upload(filePath: string, file: File) {
           const token = getLocalAccessToken();
           const formData = new FormData();
           formData.append("bucket", bucket);

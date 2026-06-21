@@ -371,6 +371,115 @@ app.post("/api/db/query", authenticateUser, async (req, res) => {
         req.body.filters.push({ type: "eq", column: "recipient_id", value: userId });
       }
     }
+
+    else if (table === "chat_request") {
+      if (method === "insert") {
+        enforceUserOwnership(data, "student_id");
+        console.log("DEBUG: chat_request insert payload:", data);
+      } else if (method === "update") {
+        const isOwner = (filters || []).some(f =>
+          (f.column === "student_id" || f.column === "mentor_id") && f.value === userId
+        );
+        if (!isOwner) {
+          const reqIdFilter = (filters || []).find(f => f.column === "request_id");
+          if (reqIdFilter) {
+            const { data: requestCheck } = await userSupabase
+              .from("chat_request")
+              .select("student_id, mentor_id, reply_id")
+              .eq("request_id", reqIdFilter.value)
+              .maybeSingle();
+
+            if (requestCheck) {
+              let resolvedMentorId = requestCheck.mentor_id;
+              if (!resolvedMentorId && requestCheck.reply_id) {
+                const { data: replyCheck } = await userSupabase
+                  .from("reply")
+                  .select("mentor_id")
+                  .eq("reply_id", requestCheck.reply_id)
+                  .maybeSingle();
+                resolvedMentorId = replyCheck?.mentor_id;
+              }
+
+              const isParticipant = requestCheck.student_id === userId || resolvedMentorId === userId;
+              if (!isParticipant) {
+                return res.status(403).json({ error: "Forbidden: You are not a participant of this request" });
+              }
+            } else {
+              return res.status(404).json({ error: "Chat request not found" });
+            }
+          }
+        }
+      } else if (method === "delete") {
+        req.body.filters = (filters || []).filter(f => f.column !== "student_id");
+        req.body.filters.push({ type: "eq", column: "student_id", value: userId });
+      }
+    }
+
+    else if (table === "chat") {
+      if (method === "insert") {
+        const isParticipant = data && (data.student_id === userId || data.mentor_id === userId);
+        if (!isParticipant) {
+          return res.status(403).json({ error: "Forbidden: You must be a participant in this conversation" });
+        }
+      } else if (method === "update" || method === "delete") {
+        const isParticipant = (filters || []).some(f =>
+          (f.column === "student_id" || f.column === "mentor_id") && f.value === userId
+        );
+        if (!isParticipant) {
+          return res.status(403).json({ error: "Forbidden: You cannot modify this conversation" });
+        }
+      }
+    }
+
+    else if (table === "message") {
+      if (method === "insert") {
+        enforceUserOwnership(data, "sender_id");
+
+        const { data: chatCheck } = await userSupabase
+          .from("chat")
+          .select("student_id, mentor_id")
+          .eq("chat_id", data.chat_id)
+          .maybeSingle();
+
+        if (!chatCheck || (chatCheck.student_id !== userId && chatCheck.mentor_id !== userId)) {
+          return res.status(403).json({ error: "Forbidden: You are not a participant in this conversation" });
+        }
+      } else if (method === "update") {
+        const msgIdFilter = (filters || []).find(f => f.column === "message_id");
+        if (msgIdFilter) {
+          const { data: msgCheck } = await userSupabase
+            .from("message")
+            .select("sender_id, chat_id")
+            .eq("message_id", msgIdFilter.value)
+            .maybeSingle();
+
+          if (!msgCheck) {
+            return res.status(404).json({ error: "Message not found" });
+          }
+
+          if (data.is_read !== undefined && data.is_read !== null) {
+            const { data: chatCheck } = await userSupabase
+              .from("chat")
+              .select("student_id, mentor_id")
+              .eq("chat_id", msgCheck.chat_id)
+              .maybeSingle();
+
+            const isRecipient = chatCheck && (
+              (chatCheck.student_id === userId && msgCheck.sender_id !== userId) ||
+              (chatCheck.mentor_id === userId && msgCheck.sender_id !== userId)
+            );
+
+            if (!isRecipient) {
+              return res.status(403).json({ error: "Forbidden: Only the message recipient can mark it as read" });
+            }
+          } else {
+            if (msgCheck.sender_id !== userId) {
+              return res.status(403).json({ error: "Forbidden: Only the sender can edit this message" });
+            }
+          }
+        }
+      }
+    }
   }
 
   // ----------------------------------------------------
