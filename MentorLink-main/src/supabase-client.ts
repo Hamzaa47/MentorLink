@@ -383,7 +383,8 @@ export const supabase = {
   storage: {
     from(bucket: string) {
       return {
-        async upload(filePath: string, file: File) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        async upload(filePath: string, file: File, options?: Record<string, unknown>) {
           const token = getLocalAccessToken();
           const formData = new FormData();
           formData.append("bucket", bucket);
