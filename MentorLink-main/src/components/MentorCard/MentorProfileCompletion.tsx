@@ -18,6 +18,7 @@ function MentorProfileCompletion() {
   const [profileImage, setProfileImage] = useState("");
   const [description, setDescription] = useState("");
   const [expertSubjects, setExpertSubjects] = useState<string[]>([]);
+  const [existingSubjects, setExistingSubjects] = useState<{ course_name: string; marks: number }[]>([]);
   const [mentorExists, setMentorExists] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -55,6 +56,7 @@ function MentorProfileCompletion() {
       }
 
       if (subjectData) {
+        setExistingSubjects(subjectData as { course_name: string; marks: number }[]);
         setExpertSubjects(
           subjectData
             .map((item: any) => item.course_name)
@@ -109,34 +111,45 @@ function MentorProfileCompletion() {
       return;
     }
 
-    // DELETE OLD SUBJECTS (if any) AND INSERT NEW ONES
-    const { error: deleteError } = await supabase
-      .from("mentor_subjects")
-      .delete()
-      .eq("mentor_id", userData.user.id);
+    // Sync subjects: only delete removed ones, and only insert new ones
+    const subjectsToDelete = existingSubjects
+      .filter((s) => !expertSubjects.includes(s.course_name))
+      .map((s) => s.course_name);
 
-    if (deleteError) {
-      console.log("Delete subjects error:", deleteError.message);
-      setErrorMessage("Error preparing subjects: " + deleteError.message);
-      setLoading(false);
-      return;
+    const subjectsToInsert = expertSubjects
+      .filter((subject) => !existingSubjects.some((s) => s.course_name === subject))
+      .map((subject) => ({
+        mentor_id: userData.user.id,
+        course_name: subject,
+        marks: -1,
+      }));
+
+    if (subjectsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("mentor_subjects")
+        .delete()
+        .eq("mentor_id", userData.user.id)
+        .in("course_name", subjectsToDelete);
+
+      if (deleteError) {
+        console.log("Delete subjects error:", deleteError.message);
+        setErrorMessage("Error preparing subjects: " + deleteError.message);
+        setLoading(false);
+        return;
+      }
     }
 
-    const subjectsToInsert = expertSubjects.map((subject) => ({
-      mentor_id: userData.user.id,
-      course_name: subject,
-      marks: -1,
-    }));
+    if (subjectsToInsert.length > 0) {
+      const { error: subjectError } = await supabase
+        .from("mentor_subjects")
+        .insert(subjectsToInsert);
 
-    const { error: subjectError } = await supabase
-      .from("mentor_subjects")
-      .insert(subjectsToInsert);
-
-    if (subjectError) {
-      console.log("Insert mentor subjects error:", subjectError.message);
-      setErrorMessage("Error saving subjects: " + subjectError.message);
-      setLoading(false);
-      return;
+      if (subjectError) {
+        console.log("Insert mentor subjects error:", subjectError.message);
+        setErrorMessage("Error saving subjects: " + subjectError.message);
+        setLoading(false);
+        return;
+      }
     }
 
     setLoading(false);

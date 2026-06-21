@@ -326,10 +326,24 @@ export default function MentorDashboard() {
       if (userAnswers[index] === q.correctAnswer) marks++;
     });
     const now = new Date().toISOString();
+
+    // Find the previous score for this subject from the local subjects state
+    const currentSubject = subjects.find(
+      (s) => (s.course_name || s["Course Name"]) === activeTask
+    );
+    const previousScore = currentSubject ? currentSubject.marks : -1;
+
     try {
+      const updatePayload: Record<string, any> = { test_taken_at: now };
+
+      // Only update the score in the database if the new score is higher
+      if (marks > previousScore) {
+        updatePayload.marks = marks;
+      }
+
       const { error } = await supabase
         .from("mentor_subjects")
-        .update({ marks, test_taken_at: now })
+        .update(updatePayload)
         .eq("mentor_id", userId)
         .eq("course_name", activeTask);
       if (error) throw error;

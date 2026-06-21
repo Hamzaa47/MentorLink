@@ -383,11 +383,11 @@ app.post("/api/db/query", authenticateUser, async (req, res) => {
     if (method === "select") {
       query = query.select(columns || "*", options || {});
     } else if (method === "insert") {
-      query = query.insert(data);
+      query = query.insert(data).select(columns || "*");
     } else if (method === "update") {
-      query = query.update(data);
+      query = query.update(data).select(columns || "*");
     } else if (method === "upsert") {
-      query = query.upsert(data);
+      query = query.upsert(data).select(columns || "*");
     } else if (method === "delete") {
       query = query.delete();
     } else {

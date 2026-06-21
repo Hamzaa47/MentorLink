@@ -117,6 +117,7 @@ const StudentPageOne = () => {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isMentor, setIsMentor] = useState(false);
+  const [activeTab, setActiveTab] = useState<"relevant" | "explore" | "mentors">("relevant");
   const [open, setOpen] = useState(false);
   const [searchContent, setSearchContent] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -332,6 +333,9 @@ const StudentPageOne = () => {
         }));
         setNotifications(formatted);
         setCache("notifications", formatted);
+      } else {
+        setNotifications([]);
+        setCache("notifications", []);
       }
     };
     fetchNotifications();
@@ -614,44 +618,75 @@ const StudentPageOne = () => {
         </div>
       </nav>
 
+      {/* Horizontal Tabs under Navbar */}
+      <div className={styles.contentTabsContainer}>
+        <button
+          type="button"
+          className={`${styles.contentTab} ${activeTab === "relevant" ? styles.activeContentTab : ""}`}
+          onClick={() => setActiveTab("relevant")}
+        >
+          Relevant Questions
+        </button>
+        <button
+          type="button"
+          className={`${styles.contentTab} ${activeTab === "explore" ? styles.activeContentTab : ""}`}
+          onClick={() => setActiveTab("explore")}
+        >
+          Explore Questions
+        </button>
+        <button
+          type="button"
+          className={`${styles.contentTab} ${activeTab === "mentors" ? styles.activeContentTab : ""}`}
+          onClick={() => setActiveTab("mentors")}
+        >
+          Top Mentors
+        </button>
+      </div>
+
       <div className={styles.body}>
-        <div className={styles.questionsSection}>
-          <div className={styles.questionBlockTitle}><h3 className={styles.sectionTitle}>Questions for Your Subjects</h3></div>
-          {questionsLoading ? <p className={styles.loadingText}>Loading questions...</p> : matchedQuestions.length === 0 ? <p className={styles.emptyText}>No questions match your search in your subjects.</p> : (
-            <>
-              <div className={styles.questionsList}>
-                {matchedQuestions.slice(0, matchedVisibleCount).map((q) => <QuestionCard key={q.question_id} id={q.question_id} subject={q.subject} topic={q.topic} description={q.description} teacherName={q.teacher_name} uploadedAt={q.uploaded_at} fileUpload={q.file_upload} />)}
-              </div>
-              {matchedVisibleCount < matchedQuestions.length && <div className={styles.loadMoreContainer}><button className={styles.loadMoreBtn} onClick={() => setMatchedVisibleCount((p) => p + 4)}>See More Questions</button></div>}
-            </>
-          )}
-        </div>
+        {activeTab === "relevant" && (
+          <div className={styles.questionsSection}>
+            <div className={styles.questionBlockTitle}><h3 className={styles.sectionTitle}>Questions for Your Subjects</h3></div>
+            {questionsLoading ? <p className={styles.loadingText}>Loading questions...</p> : matchedQuestions.length === 0 ? <p className={styles.emptyText}>No questions match your search in your subjects.</p> : (
+              <>
+                <div className={styles.questionsList}>
+                  {matchedQuestions.slice(0, matchedVisibleCount).map((q) => <QuestionCard key={q.question_id} id={q.question_id} subject={q.subject} topic={q.topic} description={q.description} teacherName={q.teacher_name} uploadedAt={q.uploaded_at} fileUpload={q.file_upload} />)}
+                </div>
+                {matchedVisibleCount < matchedQuestions.length && <div className={styles.loadMoreContainer}><button className={styles.loadMoreBtn} onClick={() => setMatchedVisibleCount((p) => p + 4)}>See More Questions</button></div>}
+              </>
+            )}
+          </div>
+        )}
 
-        <div className={styles.questionsSection}>
-          <div className={styles.questionBlockTitle}><h3 className={styles.sectionTitle}>Other Questions</h3></div>
-          {questionsLoading ? <p className={styles.loadingText}>Loading questions...</p> : unmatchedQuestions.length === 0 ? <p className={styles.emptyText}>No other questions found.</p> : (
-            <>
-              <div className={styles.questionsList}>
-                {unmatchedQuestions.slice(0, unmatchedVisibleCount).map((q) => <QuestionCard key={q.question_id} id={q.question_id} subject={q.subject} topic={q.topic} description={q.description} teacherName={q.teacher_name} uploadedAt={q.uploaded_at} fileUpload={q.file_upload} />)}
-              </div>
-              {unmatchedVisibleCount < unmatchedQuestions.length && <div className={styles.loadMoreContainer}><button className={styles.loadMoreBtn} onClick={() => setUnmatchedVisibleCount((p) => p + 4)}>See More Questions</button></div>}
-            </>
-          )}
-        </div>
+        {activeTab === "explore" && (
+          <div className={styles.questionsSection}>
+            <div className={styles.questionBlockTitle}><h3 className={styles.sectionTitle}>Other Questions</h3></div>
+            {questionsLoading ? <p className={styles.loadingText}>Loading questions...</p> : unmatchedQuestions.length === 0 ? <p className={styles.emptyText}>No other questions found.</p> : (
+              <>
+                <div className={styles.questionsList}>
+                  {unmatchedQuestions.slice(0, unmatchedVisibleCount).map((q) => <QuestionCard key={q.question_id} id={q.question_id} subject={q.subject} topic={q.topic} description={q.description} teacherName={q.teacher_name} uploadedAt={q.uploaded_at} fileUpload={q.file_upload} />)}
+                </div>
+                {unmatchedVisibleCount < unmatchedQuestions.length && <div className={styles.loadMoreContainer}><button className={styles.loadMoreBtn} onClick={() => setUnmatchedVisibleCount((p) => p + 4)}>See More Questions</button></div>}
+              </>
+            )}
+          </div>
+        )}
 
-        <div className={styles.questionsSection}>
-          <div className={styles.questionBlockTitle}><h3 className={styles.sectionTitle}>Top Mentors</h3></div>
-          {mentorsLoading ? <p className={styles.loadingText}>Loading mentors...</p> : filteredMentors.length === 0 ? <p className={styles.emptyText}>No mentors match your search.</p> : (
-            <>
-              <div className={styles.mentorCardGrid}>
-                {(showAllMentors ? filteredMentors : filteredMentors.slice(0, 3)).map((mentor) => (
-                  <MentorCard key={mentor.mentor_id} mentorId={mentor.mentor_id} image={mentor.profile_picture || undefined} userName={mentor.name || mentor.user_name} Description={mentor.Description || "No description available."} rank={mentor.rank ?? 0} reviews={mentor.total_replies ?? 0} score={mentor.average_score ?? null} />
-                ))}
-              </div>
-              {filteredMentors.length > 3 && <div className={styles.loadMoreContainer}><button className={styles.loadMoreBtn} onClick={() => setShowAllMentors(!showAllMentors)}>{showAllMentors ? "Show Less" : "See More Mentors"}</button></div>}
-            </>
-          )}
-        </div>
+        {activeTab === "mentors" && (
+          <div className={styles.questionsSection}>
+            <div className={styles.questionBlockTitle}><h3 className={styles.sectionTitle}>Top Mentors</h3></div>
+            {mentorsLoading ? <p className={styles.loadingText}>Loading mentors...</p> : filteredMentors.length === 0 ? <p className={styles.emptyText}>No mentors match your search.</p> : (
+              <>
+                <div className={styles.mentorCardGrid}>
+                  {(showAllMentors ? filteredMentors : filteredMentors.slice(0, 3)).map((mentor) => (
+                    <MentorCard key={mentor.mentor_id} mentorId={mentor.mentor_id} image={mentor.profile_picture || undefined} userName={mentor.name || mentor.user_name} Description={mentor.Description || "No description available."} rank={mentor.rank ?? 0} reviews={mentor.total_replies ?? 0} score={mentor.average_score ?? null} />
+                  ))}
+                </div>
+                {filteredMentors.length > 3 && <div className={styles.loadMoreContainer}><button className={styles.loadMoreBtn} onClick={() => setShowAllMentors(!showAllMentors)}>{showAllMentors ? "Show Less" : "See More Mentors"}</button></div>}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
 

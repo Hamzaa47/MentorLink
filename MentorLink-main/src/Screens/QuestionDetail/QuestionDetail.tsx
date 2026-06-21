@@ -40,6 +40,7 @@ const QuestionDetail = () => {
   const [likedReplies, setLikedReplies] = useState<Record<string, boolean>>({});
   const [subjectTestReady, setSubjectTestReady] = useState(false);
   const [mentorSubjectScore, setMentorSubjectScore] = useState<number | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -222,13 +223,16 @@ const QuestionDetail = () => {
       console.error("Error submitting reply:", error.message);
     } else if (data) {
       if (question) {
-        await supabase.from("notification").insert({
+        const { error: notifError } = await supabase.from("notification").insert({
           recipient_id: question.student_id,
           sender_id: currentUserId,
           question_id: id,
           reply_id: data.reply_id,
           type: "new_reply"
         });
+        if (notifError) {
+          console.error("Error creating notification:", notifError.message);
+        }
       }
 
       const profileData = await supabase.from("profile").select("user_name").eq("id", currentUserId).single();
@@ -238,6 +242,7 @@ const QuestionDetail = () => {
       };
       setReplies([...replies, addedReply]);
       setReplyText("");
+      setShowSuccess(true);
     }
     setIsSubmitting(false);
   };
@@ -386,6 +391,23 @@ const QuestionDetail = () => {
           )}
         </div>
       </div>
+
+      {showSuccess && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.successCard}>
+            <div className={styles.successIconContainer}>
+              <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" className={styles.successIcon}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className={styles.successTitle}>Response Posted!</h3>
+            <p className={styles.successMessage}>Your answer has been submitted successfully.</p>
+            <button className={styles.successCloseBtn} onClick={() => setShowSuccess(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
