@@ -336,12 +336,17 @@ export default function MentorDashboard() {
   };
 
   const loadConversations = async () => {
-    setLoadingConversations(true);
+    const isFirstLoad = conversations.length === 0;
+    if (isFirstLoad) {
+      setLoadingConversations(true);
+    }
     const { data } = await fetchConversationsAsMentor();
     if (data) {
       setConversations(data);
     }
-    setLoadingConversations(false);
+    if (isFirstLoad) {
+      setLoadingConversations(false);
+    }
   };
 
   const handleSelectChat = async (chat: Chat) => {
@@ -667,13 +672,13 @@ export default function MentorDashboard() {
     }
   };
 
-  const handleRetakeTest = (subjectObj: Subject): void => {
+  const handleStartTest = (subjectObj: Subject): void => {
     const subjectName = subjectObj["Course Name"] || subjectObj.course_name || "Unknown Subject";
     if (subjectObj.test_taken_at) {
       const takenAt = new Date(subjectObj.test_taken_at).getTime();
       // eslint-disable-next-line react-hooks/purity
       const diffMs = Date.now() - takenAt;
-      const cooldownMs = 0; // Allow instant retakes during testing
+      const cooldownMs = 10 * 60 * 1000; // 10 minutes
       if (diffMs < cooldownMs) {
         const remainingMs = cooldownMs - diffMs;
         const remainingMins = Math.floor(remainingMs / 60000);
@@ -682,7 +687,7 @@ export default function MentorDashboard() {
         if (remainingMins > 0) msg += `${remainingMins} minute${remainingMins > 1 ? "s" : ""} `;
         if (remainingMins > 0 && remainingSecs > 0) msg += "and ";
         if (remainingSecs > 0 || remainingMins === 0) msg += `${remainingSecs} second${remainingSecs !== 1 ? "s" : ""} `;
-        msg += "more before retaking this test.";
+        msg += "more before taking this test again.";
         setToastMessage(msg);
         setTimeout(() => setToastMessage(null), 5000);
         return;
@@ -947,7 +952,7 @@ export default function MentorDashboard() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            onClick={() => runGroqGeneration(subjectName)}
+                            onClick={() => handleStartTest(subjectObj)}
                             className={`${style['mentor-card']} ${style['mentor-card--pending']}`}
                           >
                             <div className={style['mentor-card-top']}>
@@ -1005,7 +1010,7 @@ export default function MentorDashboard() {
                               </p>
                             </div>
                             <div>
-                              <button onClick={() => handleRetakeTest(subjectObj)} className={style['mentor-retake-btn']}>
+                              <button onClick={() => handleStartTest(subjectObj)} className={style['mentor-retake-btn']}>
                                 Retake Test
                                 <svg className={style['mentor-icon--sm']} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

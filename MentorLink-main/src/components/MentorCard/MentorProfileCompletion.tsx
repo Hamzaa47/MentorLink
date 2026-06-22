@@ -119,7 +119,7 @@ function MentorProfileCompletion() {
       return;
     }
 
-    // CREATE OR UPDATE MENTOR RECORD
+    // CREATE OR UPDATE MENTOR RECORD (also store name and profile_picture for public browsing)
     const { error: mentorError } = await supabase.from("mentor").upsert([
       {
         mentor_id: userData.user.id,
@@ -127,6 +127,8 @@ function MentorProfileCompletion() {
         no_of_replies: 0,
         progress: "0",
         rating: 0,
+        name: name,
+        profile_picture: profileImage || null,
       },
     ]);
 

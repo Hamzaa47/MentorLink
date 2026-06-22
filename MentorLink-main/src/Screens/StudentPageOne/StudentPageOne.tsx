@@ -187,6 +187,7 @@ const StudentPageOne = () => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [loadingConversations, setLoadingConversations] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const signedProfileUrl = useSignedImage(profile?.profile_picture ?? "");
@@ -348,7 +349,7 @@ const StudentPageOne = () => {
     };
 
     fetchQuestions();
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchNotifications = async (userId: string, bypassCache = false) => {
     if (!bypassCache) {
@@ -643,14 +644,19 @@ const StudentPageOne = () => {
   });
 
   const fetchChatsData = async () => {
-    setLoadingConversations(true);
+    const isFirstLoad = conversations.length === 0;
+    if (isFirstLoad) {
+      setLoadingConversations(true);
+    }
     try {
       const { data: chats } = await fetchConversationsAsStudent();
       setConversations(chats || []);
     } catch (err) {
       console.error("Error fetching conversations:", err);
     } finally {
-      setLoadingConversations(false);
+      if (isFirstLoad) {
+        setLoadingConversations(false);
+      }
     }
   };
 
@@ -741,13 +747,23 @@ const StudentPageOne = () => {
     }
   };
 
+  const handleQuestionPosted = () => {
+    setCache("questions", undefined);
+    setCache("studentDashboardQuestions", undefined);
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
   if (activeMode !== "student") {
     return null;
   }
 
   return (
     <div className={styles.TopContainer}>
-      <QuestionForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
+      <QuestionForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onQuestionPosted={handleQuestionPosted}
+      />
       <nav className={styles.LandingNavbar}>
         <div className={styles.leftSide}>
           <div className={styles.logo}>
@@ -822,6 +838,9 @@ const StudentPageOne = () => {
           {open && (
             <div className={styles.overlay} onClick={() => { setOpen(false); }}>
               <div className={styles.sideBar} onClick={(e) => e.stopPropagation()}>
+                <button className={styles.closeSidebarBtn} onClick={() => setOpen(false)} aria-label="Close sidebar">
+                  <X size={20} />
+                </button>
                 <div className={styles.sideBarContent}>
                   <div className={styles.sideBarHeader}>
                     <img src={signedProfileUrl || userIcon} alt="Profile" className={styles.profilePicInSidebar} />
@@ -831,7 +850,7 @@ const StudentPageOne = () => {
                   <div className={styles.modeButtonSide}><span>Change Mode</span><ModeButton /></div>
                   <div className={styles.menuItems}>
                     <button className={styles.profileEditButton} onClick={() => { setOpen(false); navigate("/student-dashboard", { replace: true }); }}>Dashboard</button>
-                    <button className={styles.profileEditButton} onClick={() => { setOpen(false); navigate("/profile", { replace: true }); }}>My Profile</button>
+                    <button className={styles.profileEditButton} onClick={() => { setOpen(false); navigate("/profile", { state: { mode: "edit" }, replace: true }); }}>My Profile</button>
                     <button className={styles.profileEditButton} onClick={async () => { sessionStorage.removeItem("activeMode"); await supabase.auth.signOut(); navigate("/", { replace: true }); }}>Logout</button>
                   </div>
                 </div>

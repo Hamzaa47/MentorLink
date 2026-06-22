@@ -212,6 +212,29 @@
   animation: slideIn 0.3s ease-out;
 }
 
+.closeSidebarBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1010;
+}
+
+.closeSidebarBtn:hover {
+  background-color: var(--bg-surface-hover, rgba(0, 0, 0, 0.05));
+  color: var(--text-heading);
+  transform: rotate(90deg);
+}
+
 .sideBarContent {
   width: 100%;
   display: flex;
@@ -460,6 +483,7 @@
   font-size: medium;
   font-weight: bold;
   transition: transform 0.3s;
+  cursor: pointer;
 }
 
 .profileEditButton:hover {

@@ -80,6 +80,7 @@ function SubjectSearch({ onChange }: Props) {
   }, [query, selectedSubject]);
 
   function handleSelect(subject: string) {
+    if (selectedSubject.length >= 3) return;
     const updated = selectedSubject.includes(subject)
       ? selectedSubject
       : [...selectedSubject, subject];

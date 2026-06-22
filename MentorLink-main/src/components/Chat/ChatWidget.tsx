@@ -58,6 +58,7 @@ export default function ChatWidget() {
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+  const hasLoadedOnceRef = useRef(false);
 
   // 1. Fetch User and Role (with auth state listener to update dynamically)
   useEffect(() => {
@@ -100,13 +101,16 @@ export default function ChatWidget() {
     };
   }, []);
 
-  // 2. Fetch Lists when user loads or widget opens
+  // 2. Fetch Lists when user loads (only show loader once on initial load)
   useEffect(() => {
     if (!currentUser) return;
     
     const loadLists = async () => {
-      setLoadingChats(true);
-      setLoadingReqs(true);
+      const shouldShowLoader = !hasLoadedOnceRef.current;
+      if (shouldShowLoader) {
+        setLoadingChats(true);
+        setLoadingReqs(true);
+      }
       
       const [chatRes, reqRes] = await Promise.all([
         fetchConversationsAsStudent(),
@@ -116,12 +120,15 @@ export default function ChatWidget() {
       if (chatRes.data) setChats(chatRes.data);
       if (reqRes.data) setRequests(reqRes.data as { incoming: DecoratedChatRequest[]; outgoing: DecoratedChatRequest[] });
       
-      setLoadingChats(false);
-      setLoadingReqs(false);
+      if (shouldShowLoader) {
+        setLoadingChats(false);
+        setLoadingReqs(false);
+        hasLoadedOnceRef.current = true;
+      }
     };
 
     loadLists();
-  }, [isOpen, currentUser]);
+  }, [currentUser]);
 
   // 3. Auto-scroll chat history to bottom
   const scrollToBottom = () => {
@@ -364,13 +371,21 @@ export default function ChatWidget() {
       {/* Slide-out Chat Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            className={styles.chatPanel}
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
+          <>
+            <motion.div
+              className={styles.chatBackdrop}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+            />
+            <motion.div
+              className={styles.chatPanel}
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
             {activeChat ? (
               /* Chat Conversation Window */
               <div className={styles.chatRoom}>
@@ -442,7 +457,7 @@ export default function ChatWidget() {
                     <h3>MentorLink Chats</h3>
                     <p>Exchange questions & advice</p>
                   </div>
-                  <button className={styles.backBtn} style={{ color: '#0f172a' }} onClick={() => setIsOpen(false)} aria-label="Close widget">
+                  <button className={`${styles.backBtn} ${styles.closeBtn}`} onClick={() => setIsOpen(false)} aria-label="Close widget">
                     <X size={20} />
                   </button>
                 </div>
@@ -589,6 +604,7 @@ export default function ChatWidget() {
               </div>
             )}
           </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

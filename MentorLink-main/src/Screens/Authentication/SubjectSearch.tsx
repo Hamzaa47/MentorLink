@@ -93,6 +93,7 @@ function SubjectSearch({ onChange, initialSubjects = [], maxSubjects = 100 }: Pr
   }, [query, selectedSubject]);
 
   function handleSelect(subject: string) {
+    if (selectedSubject.length >= maxSubjects) return;
     const updated = selectedSubject.includes(subject)
       ? selectedSubject
       : [...selectedSubject, subject];

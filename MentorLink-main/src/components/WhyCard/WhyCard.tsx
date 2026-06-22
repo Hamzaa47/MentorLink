@@ -1,6 +1,7 @@
 import "./WhyCard.css";
+import React from "react";
 interface Props {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   description: string;
   iconBg: string;

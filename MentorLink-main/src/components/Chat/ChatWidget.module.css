@@ -45,14 +45,15 @@
   right: 0;
   width: 380px;
   height: 520px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  z-index: 2;
 }
 
 /* Chat Directory (List View) */
@@ -64,27 +65,27 @@
 
 .panelHeader {
   padding: 20px 20px 15px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--bg-section-alt);
+  border-bottom: 1px solid var(--border);
 }
 
 .panelHeader h3 {
   margin: 0 0 4px;
   font-size: 1.15rem;
-  color: #0f172a;
+  color: var(--text-heading);
   font-weight: 800;
 }
 
 .panelHeader p {
   margin: 0;
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .tabHeaders {
   display: flex;
-  border-bottom: 1px solid #e2e8f0;
-  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
 }
 
 .tabBtn {
@@ -156,7 +157,7 @@
 .emptyState p {
   margin: 0;
   font-size: 0.92rem;
-  color: #475569;
+  color: var(--text-heading);
   font-weight: 600;
 }
 
@@ -176,7 +177,7 @@
 }
 
 .conversationCard:hover {
-  background: #f1f5f9;
+  background: var(--bg-section-alt);
 }
 
 .chatAvatar {
@@ -202,7 +203,7 @@
 .chatName {
   margin: 0;
   font-size: 0.92rem;
-  color: #0f172a;
+  color: var(--text-heading);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -217,7 +218,7 @@
 .chatPreview {
   margin: 0;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-body);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -264,6 +265,17 @@
 .backBtn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
+}
+
+.closeBtn {
+  color: var(--text-heading) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.closeBtn:hover {
+  background: var(--bg-surface-hover, rgba(0, 0, 0, 0.05)) !important;
+  color: var(--primary) !important;
+  transform: rotate(90deg);
 }
 
 .peerAvatar {
@@ -372,15 +384,17 @@
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  background: #ffffff;
-  border-top: 1px solid #e2e8f0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
 }
 
 .messageInput {
   flex: 1;
   padding: 10px 14px;
   border-radius: 99px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-heading);
   font-size: 0.88rem;
   outline: none;
 }
@@ -408,8 +422,8 @@
 }
 
 .sendBtn:disabled {
-  background: #e2e8f0;
-  color: #94a3b8;
+  background: var(--border);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -446,8 +460,8 @@
 }
 
 .requestCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
   display: flex;
@@ -467,7 +481,7 @@
   gap: 6px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-heading);
 }
 
 .statusLabel {
@@ -501,7 +515,7 @@
 .reqMsg {
   margin: 0;
   font-size: 0.82rem;
-  color: #475569;
+  color: var(--text-body);
   font-style: italic;
   line-height: 1.4;
 }
@@ -537,9 +551,9 @@
 }
 
 .rejectBtn {
-  background: #f1f5f9;
-  color: #dc2626;
-  border: 1px solid #fee2e2;
+  background: var(--bg-section-alt);
+  color: var(--red-600);
+  border: 1px solid var(--border);
 }
 
 .rejectBtn:hover {
@@ -578,4 +592,16 @@
     width: 50px;
     height: 50px;
   }
+}
+
+.chatBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1;
 }

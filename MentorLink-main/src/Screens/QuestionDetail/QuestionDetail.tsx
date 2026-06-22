@@ -304,7 +304,7 @@ const QuestionDetail = () => {
               <div className={styles.avatar}>{question.teacher_name.charAt(0)}</div>
               <div>
                 <span style={{ display: "block", fontWeight: 600, color: "#fff" }}>
-                  Prof. {question.teacher_name}
+                  {question.teacher_name}
                 </span>
                 <span>{formatDate(question.uploaded_at)}</span>
               </div>
@@ -358,10 +358,10 @@ const QuestionDetail = () => {
 
           {isQuestionAuthor || isMentor ? (
             <>
-              {!isQuestionAuthor && (!subjectTestReady || mentorSubjectScore === null || (mentorSubjectScore / 15) * 100 < 70) ? (
+              {!isQuestionAuthor && (!subjectTestReady || mentorSubjectScore === null || (mentorSubjectScore / 15) * 100 < 50) ? (
                 <div className={styles.replyNotice}>
                   <p>
-                    You must complete the expert subject test for <strong>{question.subject}</strong> and score at least 70% before replying.
+                    You must complete the expert subject test for <strong>{question.subject}</strong> and score at least 50% before replying.
                   </p>
                   <p style={{ marginTop: 8, color: '#e2e8f0' }}>
                     {mentorSubjectScore !== null

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import style from "./Profile.module.css";
 import type { ChangeEvent } from "react";
 import { supabase } from "../../supabase-client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import UploadImage from "./imageUpload";
 import { useSignedImage } from "../../Hooks/UseScrollRevealHook/useSignedImage";
@@ -10,6 +10,8 @@ import SubjectSearch from "./SubjectSearch";
 
 function Profile() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEditMode = location.state?.mode === "edit";
 
   const [loading, setLoading] = useState(false);
 
@@ -63,6 +65,10 @@ function Profile() {
       }
 
       if (data) {
+        if (!isEditMode && data.name && data.user_name) {
+          navigate("/userDashboard", { replace: true });
+          return;
+        }
         setName(data.name || "");
         setUsername(data.user_name || "");
         setDepartment(data.department || "");
@@ -88,7 +94,7 @@ function Profile() {
     };
 
     getProfile();
-  }, []);
+  }, [isEditMode, navigate]);
 
   // ================= SAVE PROFILE =================
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -158,7 +164,7 @@ function Profile() {
     }
 
     setLoading(false);
-    navigate("/userDashboard");
+    navigate("/userDashboard", { replace: true });
   };
 
   return (
@@ -282,6 +288,7 @@ function Profile() {
               <SubjectSearch
                 onChange={setDifficultSubjects}
                 initialSubjects={difficultSubjects}
+                maxSubjects={3}
               />
             </div>
           </div>

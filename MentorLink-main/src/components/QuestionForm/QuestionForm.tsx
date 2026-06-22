@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
 import styles from "./QuestionForm.module.css";
 import { supabase } from "../../supabase-client";
 
@@ -67,9 +67,10 @@ const subjects = [
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  onQuestionPosted?: () => void;
 };
 
-const AskQuestionForm = ({ isOpen, onClose }: Props) => {
+const AskQuestionForm = ({ isOpen, onClose, onQuestionPosted }: Props) => {
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState("");
   const [teacherName, setTeacherName] = useState("");
@@ -77,6 +78,48 @@ const AskQuestionForm = ({ isOpen, onClose }: Props) => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mentorCheckLoading, setMentorCheckLoading] = useState(false);
+  const [noMentorRegistered, setNoMentorRegistered] = useState(false);
+
+  useEffect(() => {
+    if (!subject) {
+      setNoMentorRegistered(false);
+      return;
+    }
+
+    const checkMentor = async () => {
+      if (subjects.includes(subject)) {
+        setMentorCheckLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from("mentor_subjects")
+            .select("mentor_id")
+            .eq("course_name", subject)
+            .limit(1);
+          if (!error) {
+            setNoMentorRegistered(!data || data.length === 0);
+          } else {
+            setNoMentorRegistered(false);
+          }
+        } catch (err) {
+          console.error(err);
+          setNoMentorRegistered(false);
+        } finally {
+          setMentorCheckLoading(false);
+        }
+      } else {
+        setNoMentorRegistered(false);
+      }
+    };
+
+    const handler = setTimeout(() => {
+      checkMentor();
+    }, 300);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [subject]);
 
   if (!isOpen) return null;
 
@@ -192,7 +235,11 @@ const AskQuestionForm = ({ isOpen, onClose }: Props) => {
     setFile(null);
     setLoading(false);
     onClose();
-    window.location.reload();
+    if (onQuestionPosted) {
+      onQuestionPosted();
+    } else {
+      window.location.reload();
+    }
   };
 
   return (
@@ -217,6 +264,11 @@ const AskQuestionForm = ({ isOpen, onClose }: Props) => {
                 <option key={i} value={sub} />
               ))}
             </datalist>
+            {noMentorRegistered && (
+              <div className={styles.mentorWarning}>
+                ⚠️ Any mentor of this subject is not registered yet.
+              </div>
+            )}
           </div>
 
           <div className={styles.inputGroup}>

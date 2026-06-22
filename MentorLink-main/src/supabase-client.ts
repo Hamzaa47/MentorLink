@@ -10,16 +10,53 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publisha
 // Real client strictly for real-time WebSocket subscriptions
 export const realtimeSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function getLocalAccessToken(): string {
+async function refreshSessionIfNeeded(): Promise<string> {
   const sessionStr = localStorage.getItem("sb-session");
   if (!sessionStr) return "";
   try {
     const session = JSON.parse(sessionStr);
-    return session?.access_token || "";
-  } catch {
+    if (!session?.access_token) return "";
+
+    const expiresAt = session.expires_at;
+    const now = Math.floor(Date.now() / 1000);
+    // If token expires in less than 5 minutes (300 seconds), refresh it
+    if (expiresAt && (expiresAt - now < 300)) {
+      if (!session.refresh_token) return session.access_token;
+      
+      console.log("Token is close to expiry or expired, refreshing...");
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          refresh_token: session.refresh_token
+        })
+      });
+
+      if (res.ok) {
+        const newSession = await res.json();
+        if (newSession && newSession.access_token) {
+          localStorage.setItem("sb-session", JSON.stringify(newSession));
+          if (newSession.user) {
+            localStorage.setItem("sb-user", JSON.stringify(newSession.user));
+          }
+          triggerAuthChange("SIGNED_IN", newSession);
+          console.log("Session refreshed successfully");
+          return newSession.access_token;
+        }
+      } else {
+        console.error("Failed to refresh token", await res.text());
+      }
+    }
+    return session.access_token;
+  } catch (err) {
+    console.error("Error refreshing token:", err);
     return "";
   }
 }
+
 
 // Custom listeners for auth state changes
 const authListeners = new Set<(event: string, session: any) => void>();
@@ -32,6 +69,14 @@ function triggerAuthChange(event: string, session: any) {
       console.error("Auth listener callback error:", e);
     }
   });
+}
+
+function getFriendlyErrorMessage(err: any): string {
+  const msg = err?.message || "";
+  if (msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("load failed") || msg.toLowerCase().includes("networkerror") || msg.toLowerCase().includes("refused")) {
+    return "Check your internet connection or make sure the backend server is running.";
+  }
+  return msg || "An unexpected network error occurred.";
 }
 
 class MockBuilder {
@@ -128,7 +173,7 @@ class MockBuilder {
   }
 
   private async execute() {
-    const token = getLocalAccessToken();
+    const token = await refreshSessionIfNeeded();
     try {
       const res = await fetch(`${API_URL}/db/query`, {
         method: "POST",
@@ -161,7 +206,7 @@ class MockBuilder {
       }
       return { data: json.data, count: json.count, error: null };
     } catch (err: any) {
-      return { data: null, count: null, error: { message: err.message || "Network error" } };
+      return { data: null, count: null, error: { message: getFriendlyErrorMessage(err) } };
     }
   }
 }
@@ -189,7 +234,7 @@ export const supabase = {
 
         return { data: json.data, error: null };
       } catch (err: any) {
-        return { data: null, error: { message: err.message || "Signup network error" } };
+        return { data: null, error: { message: getFriendlyErrorMessage(err) } };
       }
     },
 
@@ -219,12 +264,12 @@ export const supabase = {
 
         return { data: json.data, error: null };
       } catch (err: any) {
-        return { data: null, error: { message: err.message || "Signin network error" } };
+        return { data: null, error: { message: getFriendlyErrorMessage(err) } };
       }
     },
 
     async signOut() {
-      const token = getLocalAccessToken();
+      const token = await refreshSessionIfNeeded();
       try {
         await fetch(`${API_URL}/auth/signout`, {
           method: "POST",
@@ -253,7 +298,7 @@ export const supabase = {
         }
       }
 
-      const token = getLocalAccessToken();
+      const token = await refreshSessionIfNeeded();
       if (!token) {
         return { data: { user: null }, error: { message: "No active session" } };
       }
@@ -278,11 +323,12 @@ export const supabase = {
         localStorage.setItem("sb-user", JSON.stringify(json.user));
         return { data: { user: json.user }, error: null };
       } catch (err: any) {
-        return { data: { user: null }, error: { message: err.message || "Network error" } };
+        return { data: { user: null }, error: { message: getFriendlyErrorMessage(err) } };
       }
     },
 
     async getSession() {
+      const token = await refreshSessionIfNeeded();
       const sessionStr = localStorage.getItem("sb-session");
       if (!sessionStr) {
         return { data: { session: null }, error: null };
@@ -321,7 +367,7 @@ export const supabase = {
 
         return { data: json.data, error: null };
       } catch (err: any) {
-        return { data: { session: null, user: null }, error: { message: err.message || "Network error" } };
+        return { data: { session: null, user: null }, error: { message: getFriendlyErrorMessage(err) } };
       }
     },
 
@@ -345,7 +391,7 @@ export const supabase = {
 
         return { data: json.data, error: null };
       } catch (err: any) {
-        return { data: null, error: { message: err.message || "Network error" } };
+        return { data: null, error: { message: getFriendlyErrorMessage(err) } };
       }
     },
 
@@ -385,7 +431,7 @@ export const supabase = {
       return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         async upload(filePath: string, file: File, options?: Record<string, unknown>) {
-          const token = getLocalAccessToken();
+          const token = await refreshSessionIfNeeded();
           const formData = new FormData();
           formData.append("bucket", bucket);
           formData.append("path", filePath);
@@ -410,7 +456,7 @@ export const supabase = {
         },
 
         async remove(paths: string[]) {
-          const token = getLocalAccessToken();
+          const token = await refreshSessionIfNeeded();
           try {
             const res = await fetch(`${API_URL}/storage/delete`, {
               method: "POST",
@@ -441,7 +487,7 @@ export const supabase = {
         },
 
         async createSignedUrl(filePath: string, expiresIn: number) {
-          const token = getLocalAccessToken();
+          const token = await refreshSessionIfNeeded();
           try {
             const res = await fetch(`${API_URL}/storage/signed-url`, {
               method: "POST",

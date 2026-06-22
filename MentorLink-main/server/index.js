@@ -221,17 +221,109 @@ app.post("/api/auth/resend", async (req, res) => {
 });
 
 
+// ================= PUBLIC MENTOR BROWSE ENDPOINT =================
+// This endpoint is unauthenticated and returns public mentor data for the landing page.
+// It reads name and profile_picture from the mentor table directly (no RLS restriction).
+app.get("/api/mentors/browse", async (req, res) => {
+  try {
+    if (!supabase) {
+      return res.status(500).json({ error: "Database not configured" });
+    }
+
+    // Fetch mentors with name and profile_picture stored directly in mentor table
+    const { data: mentorRows, error: mentorError } = await supabase
+      .from("mentor")
+      .select("mentor_id, Description, name, profile_picture");
+
+    if (mentorError || !mentorRows || mentorRows.length === 0) {
+      return res.json({ data: [] });
+    }
+
+    const mentorIds = mentorRows.map(m => m.mentor_id).filter(Boolean);
+
+    // Fetch subjects (public table, no RLS issues)
+    const { data: subjectsData } = await supabase
+      .from("mentor_subjects")
+      .select("mentor_id, course_name")
+      .in("mentor_id", mentorIds);
+
+    const subjectsMap = (subjectsData || []).reduce((acc, s) => {
+      if (!acc[s.mentor_id]) acc[s.mentor_id] = [];
+      acc[s.mentor_id].push(s.course_name);
+      return acc;
+    }, {});
+
+    // Generate signed URLs for all profile pictures (batch request)
+    const picPaths = mentorRows.map(m => m.profile_picture).filter(Boolean);
+    let signedUrlMap = {};
+    if (picPaths.length > 0) {
+      const { data: signedData } = await supabase.storage
+        .from("profile_image")
+        .createSignedUrls(picPaths, 86400); // 24-hour expiry
+
+      if (signedData) {
+        signedData.forEach(({ path, signedUrl }) => {
+          if (signedUrl) signedUrlMap[path] = signedUrl;
+        });
+      }
+    }
+
+    const formatted = mentorRows.map(m => ({
+      mentor_id: m.mentor_id,
+      name: m.name || null,
+      profile_picture: m.profile_picture
+        ? (signedUrlMap[m.profile_picture] || null)
+        : null,
+      subjects: subjectsMap[m.mentor_id] || [],
+      description: m.Description || "No description provided."
+    }));
+
+    return res.json({ data: formatted });
+  } catch (err) {
+    console.error("Error in /api/mentors/browse:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 // ================= DB PROXY ENDPOINT WITH SECURITY POLICIES =================
-app.post("/api/db/query", authenticateUser, async (req, res) => {
+app.post("/api/db/query", async (req, res) => {
   const { table, method, columns, options, data, filters, order, limit, single, maybeSingle } = req.body;
 
   if (!table || !method) {
     return res.status(400).json({ error: "Table and method are required" });
   }
 
-  const userId = req.user.id;
+  // Determine if this is a public select query on safe tables
+  const publicTables = ["mentor", "profile", "mentor_subjects", "subject"];
+  const isPublicSelect = method === "select" && publicTables.includes(table);
 
-  // Initialize a request-scoped Supabase client that forwards the user's JWT token
+  // Optionally authenticate the user if token is present
+  let userId = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (!error && user) {
+        req.user = user;
+        userId = user.id;
+      }
+    } catch (err) {
+      console.error("Token verification failed in query endpoint:", err.message);
+    }
+  }
+
+  // If not authenticated and it's not a public select query, reject
+  if (!userId && !isPublicSelect) {
+    return res.status(401).json({ error: "Unauthorized: Access to this table/method requires authentication" });
+  }
+
+  // Initialize a request-scoped Supabase client that conditionally forwards the user's JWT token if present
+  const headers = {};
+  if (userId && req.headers.authorization) {
+    headers.Authorization = req.headers.authorization;
+  }
   const userSupabase = createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,
@@ -239,9 +331,7 @@ app.post("/api/db/query", authenticateUser, async (req, res) => {
       detectSessionInUrl: false
     },
     global: {
-      headers: {
-        Authorization: req.headers.authorization
-      }
+      headers
     }
   });
 
