@@ -163,7 +163,7 @@ const MentorProfile = () => {
             return { id: mId, score: mPoints };
           });
 
-          scoreboard.sort((a, b) => b.score - a.score);
+          scoreboard.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
           const activePoints = scoreboard.find(item => item.id === id)?.score || 0;
           const matchIdx = scoreboard.findIndex(item => item.id === id);
           const derivedRank = matchIdx !== -1 ? matchIdx + 1 : scoreboard.length + 1;

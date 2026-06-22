@@ -306,7 +306,7 @@ export default function MentorDashboard() {
           return { id, score: mPoints };
         });
 
-        scoreboard.sort((a: { id: string; score: number }, b: { id: string; score: number }) => b.score - a.score);
+        scoreboard.sort((a: { id: string; score: number }, b: { id: string; score: number }) => b.score - a.score || a.id.localeCompare(b.id));
         const derivedRank = scoreboard.findIndex((item: { id: string; score: number }) => item.id === currentUserId) + 1;
         const activePoints = scoreboard.find((item: { id: string; score: number }) => item.id === currentUserId)?.score || points;
 
@@ -629,6 +629,7 @@ export default function MentorDashboard() {
       // Invalidate cache since scores and rank updated
       setCache("mentorSubjects", undefined);
       setCache("mentorRank", undefined);
+      setCache("topMentors", undefined);
       fetchSubjects(userId);
       fetchNotifications(userId);
       fetchMentorRank(userId);

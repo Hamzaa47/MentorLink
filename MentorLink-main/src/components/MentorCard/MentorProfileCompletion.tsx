@@ -3,6 +3,7 @@ import style from "../../Screens/Authentication/Profile.module.css";
 import type { ChangeEvent } from "react";
 import { supabase } from "../../supabase-client";
 import { useNavigate } from "react-router-dom";
+import { setCache } from "../../utils/cache";
 
 import { useSignedImage } from "../../Hooks/UseScrollRevealHook/useSignedImage";
 import SubjectSearch from "../../Screens/Authentication/SubjectSearch";
@@ -182,6 +183,9 @@ function MentorProfileCompletion() {
 
     setLoading(false);
     sessionStorage.setItem("activeMode", "mentor");
+    setCache("mentorSubjects", undefined);
+    setCache("mentorRank", undefined);
+    setCache("topMentors", undefined);
     navigate("/mentor-dashboard", { replace: true });
   };
 

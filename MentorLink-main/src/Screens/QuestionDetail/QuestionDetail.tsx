@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase-client";
 import styles from "./QuestionDetail.module.css";
 import { formatFullDate } from "../../utils/date";
+import { setCache } from "../../utils/cache";
 
 type Question = {
   question_id: string;
@@ -223,6 +224,9 @@ const QuestionDetail = () => {
     if (error) {
       console.error("Error submitting reply:", error.message);
     } else if (data) {
+      setCache("topMentors", undefined);
+      setCache("mentorRank", undefined);
+
       if (question) {
         const { error: notifError } = await supabase.from("notification").insert({
           recipient_id: question.student_id,

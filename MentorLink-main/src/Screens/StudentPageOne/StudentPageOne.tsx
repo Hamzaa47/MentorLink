@@ -531,7 +531,7 @@ const StudentPageOne = () => {
           return { id, score: mPoints, avg: mAvg, replies: mReplies };
         });
 
-        scoreboard.sort((a, b) => b.score - a.score);
+        scoreboard.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
 
         const mentorList = (mentorRows || []).map((mentor: { mentor_id: string; Description: string | null }) => {
           const pInfo = profileMap[mentor.mentor_id] || {};
