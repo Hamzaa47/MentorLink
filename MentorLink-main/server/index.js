@@ -100,6 +100,25 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 
   try {
+    // Pre-emptively check if the email already exists using our custom RPC function
+    // (with a warning fallback if the function hasn't been created in Supabase SQL editor yet)
+    const { data: exists, error: checkError } = await supabase
+      .rpc("check_email_exists", { email_to_check: email });
+
+    if (!checkError && exists === true) {
+      return res.status(400).json({ error: "Email already registered. Please sign in." });
+    } else if (checkError) {
+      if (checkError.code === "PGRST202" || (checkError.message && checkError.message.includes("Could not find the function"))) {
+        console.warn("\n========================================================================\n" +
+                     "⚠️  WARNING: Duplicate email check on signup is currently DISABLED!\n" +
+                     "Please run the SQL migration in 'server/check_email_exists.sql' in your\n" +
+                     "Supabase Dashboard > SQL Editor to enable this validation.\n" +
+                     "========================================================================\n");
+      } else {
+        console.warn("check_email_exists RPC error:", checkError.message);
+      }
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -110,6 +129,10 @@ app.post("/api/auth/signup", async (req, res) => {
 
     if (error) {
       return res.status(400).json({ error: error.message });
+    }
+
+    if (!data?.user || (data.user.identities && data.user.identities.length === 0)) {
+      return res.status(400).json({ error: "Email already registered. Please sign in." });
     }
 
     return res.json({ data });

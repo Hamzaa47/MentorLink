@@ -55,7 +55,7 @@ function Auth({ onClose }: Props) {
         return;
       }
 
-      if (data?.user?.identities?.length === 0) {
+      if (!data?.user || data?.user?.identities?.length === 0) {
         setErrorMessage("Email already registered. Please sign in.");
         setLoading(false);
         return;
