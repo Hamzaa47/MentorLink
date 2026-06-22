@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./QuestionCard.module.css";
 import { supabase } from "../../supabase-client";
+import { parseUTCDate } from "../../utils/date";
 
 interface QuestionCardProps {
   id: string;
@@ -73,7 +74,7 @@ const QuestionCard = ({
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Unknown date";
-    const date = new Date(dateString);
+    const date = parseUTCDate(dateString);
     if (Number.isNaN(date.getTime())) return "Unknown date";
     return date.toLocaleDateString("en-US", {
       year: "numeric",

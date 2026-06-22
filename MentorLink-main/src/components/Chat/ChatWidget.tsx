@@ -17,6 +17,7 @@ import { useSignedImage } from "../../Hooks/UseScrollRevealHook/useSignedImage";
 import type { User, RealtimeChannel } from "@supabase/supabase-js";
 import styles from "./ChatWidget.module.css";
 import userIcon from "../../assets/userIcon.svg";
+import { parseUTCDate } from "../../utils/date";
 
 const ChatAvatar = ({ imagePath, name, className, fallbackIcon }: { imagePath?: string | null, name?: string, className?: string, fallbackIcon: string }) => {
   const signedUrl = useSignedImage(imagePath || null);
@@ -426,7 +427,7 @@ export default function ChatWidget() {
                           <div className={`${styles.bubble} ${isMe ? styles.meBubble : styles.peerBubble}`}>
                             <p className={styles.messageText}>{msg.content}</p>
                             <span className={styles.timestamp}>
-                              {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {parseUTCDate(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                         </div>
@@ -513,7 +514,7 @@ export default function ChatWidget() {
                                 </h4>
                                 {chat.latest_message_time && (
                                   <span className={styles.chatTime}>
-                                    {new Date(chat.latest_message_time).toLocaleDateString()}
+                                    {parseUTCDate(chat.latest_message_time).toLocaleDateString()}
                                   </span>
                                 )}
                               </div>

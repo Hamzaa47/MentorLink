@@ -20,6 +20,7 @@ import { supabaseRealtime, setRealtimeAuth } from "../../supabase-realtime";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { MessageSquare, Send, ArrowLeft, MessageCircle, Award } from "lucide-react";
 import userIcon from "../../assets/userIcon.svg";
+import { parseUTCDate } from "../../utils/date";
 
 const ChatAvatar = ({ imagePath, name, className, fallbackIcon }: { imagePath?: string | null, name?: string, className?: string, fallbackIcon: string }) => {
   const signedUrl = useSignedImage(imagePath || null);
@@ -845,7 +846,7 @@ export default function MentorDashboard() {
                         New question in <strong>{notif.subject}</strong>: "{notif.topic}"
                       </p>
                       <span className={style['mentor-notif-time']}>
-                        {new Date(notif.created_at).toLocaleString()}
+                        {parseUTCDate(notif.created_at).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -1061,7 +1062,7 @@ export default function MentorDashboard() {
                                 </h4>
                                 {c.latest_message_time && (
                                   <span className={style['chat-card-time']}>
-                                    {new Date(c.latest_message_time).toLocaleDateString()}
+                                    {parseUTCDate(c.latest_message_time).toLocaleDateString()}
                                   </span>
                                 )}
                               </div>
@@ -1118,7 +1119,7 @@ export default function MentorDashboard() {
                                 <div className={`${style['chat-msg-bubble']} ${isMe ? style['me'] : style['peer']}`}>
                                   <p className={style['chat-msg-text']}>{msg.content}</p>
                                   <span className={style['chat-msg-time']}>
-                                    {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {parseUTCDate(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                               </div>

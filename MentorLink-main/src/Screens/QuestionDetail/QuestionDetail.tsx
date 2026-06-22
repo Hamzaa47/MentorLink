@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase-client";
 import styles from "./QuestionDetail.module.css";
+import { formatFullDate } from "../../utils/date";
 
 type Question = {
   question_id: string;
@@ -247,14 +248,7 @@ const QuestionDetail = () => {
     setIsSubmitting(false);
   };
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+  const formatDate = (dateString: string) => formatFullDate(dateString);
 
   const isImage = (url: string) => /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(url);
 
@@ -303,7 +297,7 @@ const QuestionDetail = () => {
             <div className={styles.teacherInfo}>
               <div className={styles.avatar}>{question.teacher_name.charAt(0)}</div>
               <div>
-                <span style={{ display: "block", fontWeight: 600, color: "#fff" }}>
+                <span style={{ display: "block", fontWeight: 600, color: "var(--text-heading)" }}>
                   {question.teacher_name}
                 </span>
                 <span>{formatDate(question.uploaded_at)}</span>

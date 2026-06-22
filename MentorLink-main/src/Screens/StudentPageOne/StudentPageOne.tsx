@@ -15,6 +15,7 @@ import { useSignedImage } from "../../Hooks/UseScrollRevealHook/useSignedImage";
 import MentorCard from "../../components/MentorCard/MentorCard";
 import QuestionForm from "../../components/QuestionForm/QuestionForm";
 import QuestionCard from "../../components/QuestionCard/QuestionCard";
+import { parseUTCDate } from "../../utils/date";
 
 
 const ChatAvatar = ({ imagePath, name, className, fallbackIcon }: { imagePath?: string | null, name?: string, className?: string, fallbackIcon: string }) => {
@@ -640,7 +641,7 @@ const StudentPageOne = () => {
     if (a.is_read !== b.is_read) {
       return a.is_read ? 1 : -1;
     }
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    return parseUTCDate(b.created_at).getTime() - parseUTCDate(a.created_at).getTime();
   });
 
   const fetchChatsData = async () => {
@@ -816,7 +817,7 @@ const StudentPageOne = () => {
                             <div className={styles.notifDot}></div>
                             <div className={styles.notifContent}>
                               <p>New reply on: <strong>{notif.topic}</strong></p>
-                              <span>{new Date(notif.created_at).toLocaleString()}</span>
+                              <span>{parseUTCDate(notif.created_at).toLocaleString()}</span>
                             </div>
                           </div>
                         ))}
@@ -994,7 +995,7 @@ const StudentPageOne = () => {
                               </h4>
                               {c.latest_message_time && (
                                 <span className={styles['chat-card-time']}>
-                                  {new Date(c.latest_message_time).toLocaleDateString()}
+                                  {parseUTCDate(c.latest_message_time).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
@@ -1050,7 +1051,7 @@ const StudentPageOne = () => {
                               <div className={`${styles['chat-msg-bubble']} ${isMe ? styles['chat-msg-bubble-me'] : styles['chat-msg-bubble-peer']}`}>
                                 <p className={styles['chat-msg-text']}>{msg.content}</p>
                                 <span className={styles['chat-msg-time']}>
-                                  {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {parseUTCDate(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
                             </div>
@@ -1162,7 +1163,7 @@ const StudentPageOne = () => {
                               <div className={styles.suggestionMeta}>
                                 <span>Teacher: {item.teacher_name}</span>
                                 <span>•</span>
-                                <span>{new Date(item.uploaded_at).toLocaleDateString()}</span>
+                                <span>{parseUTCDate(item.uploaded_at).toLocaleDateString()}</span>
                               </div>
                             </div>
                           ))}
