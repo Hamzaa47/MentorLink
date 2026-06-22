@@ -1,0 +1,48 @@
+name: mentorlink
+region: nyc
+services:
+  - name: mentorlink-backend
+    github:
+      repo: abdul-mannan4/MentorLink
+      branch: main
+      deploy_on_push: true
+    source_dir: MentorLink-main/server
+    run_command: npm start
+    http_port: 5000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: PORT
+        scope: RUN_TIME
+        value: "5000"
+      - key: SUPABASE_URL
+        scope: RUN_TIME
+        value: "your-supabase-url"
+      - key: SUPABASE_KEY
+        scope: RUN_TIME
+        value: "your-supabase-key"
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: ${mentorlink-frontend.PUBLIC_URL}
+static_sites:
+  - name: mentorlink-frontend
+    github:
+      repo: abdul-mannan4/MentorLink
+      branch: main
+      deploy_on_push: true
+    source_dir: MentorLink-main
+    build_command: npm run build
+    output_dir: dist
+    envs:
+      - key: VITE_SUPABASE_URL
+        scope: BUILD_TIME
+        value: "your-supabase-url"
+      - key: VITE_SUPABASE_ANON_KEY
+        scope: BUILD_TIME
+        value: "your-supabase-anon-key"
+      - key: VITE_API_URL
+        scope: BUILD_TIME
+        value: ${mentorlink-backend.PUBLIC_URL}/api
+      - key: VITE_GROQ_API_KEY
+        scope: BUILD_TIME
+        value: "your-groq-api-key"
