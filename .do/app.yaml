@@ -46,3 +46,15 @@ static_sites:
       - key: VITE_GROQ_API_KEY
         scope: BUILD_TIME
         value: "your-groq-api-key"
+ingress:
+  rules:
+    - component:
+        name: mentorlink-frontend
+      match:
+        path:
+          prefix: /
+    - component:
+        name: mentorlink-backend
+      match:
+        path:
+          prefix: /api
