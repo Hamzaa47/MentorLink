@@ -329,3 +329,25 @@
   flex-direction: column;
   align-items: center;
 }
+
+@media (max-width: 480px) {
+  .loginCard {
+    padding: 2rem 1.5rem;
+    border-radius: 1.5rem;
+  }
+  .title {
+    font-size: 1.75rem;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .input {
+    height: 2.75rem;
+    font-size: 0.9rem;
+  }
+  .submitBtn {
+    height: 2.75rem;
+    font-size: 0.95rem;
+  }
+}

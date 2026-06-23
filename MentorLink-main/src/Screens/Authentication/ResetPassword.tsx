@@ -45,9 +45,29 @@ function ResetPassword() {
         if (session) {
           setSessionReady(true);
         } else {
-          setErrorMessage("No active session found. Please click the reset link in your email.");
+          // Don't show error immediately, wait a moment for onAuthStateChange to fire if parsing hash
+          setTimeout(() => {
+            supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+              if (!currentSession) {
+                setErrorMessage("No active session found. Please click the reset link in your email.");
+              }
+            });
+          }, 1500);
         }
       });
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, session) => {
+        if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
+          setSessionReady(true);
+          setErrorMessage(""); // Clear error if session becomes ready
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
     }
   }, []);
 
