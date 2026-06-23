@@ -313,6 +313,12 @@ app.post("/api/auth/update-user", authenticateUser, async (req, res) => {
       global: { headers: { Authorization: `Bearer ${token}` } }
     });
 
+    // Populate the internal auth state with the user's session
+    await userSupabase.auth.setSession({
+      access_token: token,
+      refresh_token: ""
+    });
+
     const { data, error } = await userSupabase.auth.updateUser({ password });
 
     if (error) {
