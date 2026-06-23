@@ -14,13 +14,25 @@ function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  // Fallback states for manual OTP entry if the magic link expired/got pre-fetched
+  const [showOtpVerify, setShowOtpVerify] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [tokenInput, setTokenInput] = useState("");
+  const [otpError, setOtpError] = useState("");
+
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const tokenHash = queryParams.get("token_hash");
     const error = queryParams.get("error");
+    const hash = window.location.hash;
+    const hashParams = new URLSearchParams(hash.substring(1));
 
-    if (error) {
-      setErrorMessage("The reset link has expired or is invalid. Please request a new one.");
+    const errorCode = queryParams.get("error_code") || hashParams.get("error_code");
+    const errorDesc = queryParams.get("error_description") || hashParams.get("error_description") || queryParams.get("error_description");
+
+    if (error || errorCode === "otp_expired" || errorDesc?.toLowerCase().includes("expired") || errorDesc?.toLowerCase().includes("invalid")) {
+      // Magic link expired or invalid (e.g. pre-fetched by Outlook). Show the manual fallback OTP verification!
+      setShowOtpVerify(true);
       return;
     }
 
@@ -48,7 +60,8 @@ function ResetPassword() {
           setSessionReady(true);
           setErrorMessage("");
         } else {
-          setErrorMessage(json.error || "Failed to exchange verification code. The link may have expired or already been used.");
+          // If code exchange fails, fall back to manual OTP verification
+          setShowOtpVerify(true);
         }
         setLoading(false);
       })
@@ -60,13 +73,11 @@ function ResetPassword() {
     }
 
     // Explicitly parse hash fragment (common in implicit grant redirects from Supabase)
-    const hash = window.location.hash;
     if (hash && hash.includes("access_token=")) {
-      const params = new URLSearchParams(hash.substring(1)); // remove '#'
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-      const expiresIn = params.get("expires_in");
-      const type = params.get("type");
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const expiresIn = hashParams.get("expires_in");
+      const type = hashParams.get("type");
 
       if (accessToken && (type === "recovery" || hash.includes("type=recovery"))) {
         setLoading(true);
@@ -98,7 +109,7 @@ function ResetPassword() {
             setSessionReady(true);
             setErrorMessage("");
           } else {
-            setErrorMessage(json.error || "Failed to retrieve user profile from verification session.");
+            setShowOtpVerify(true);
           }
           setLoading(false);
         })
@@ -118,7 +129,7 @@ function ResetPassword() {
         })
         .then(({ data, error }) => {
           if (error) {
-            setErrorMessage(error.message);
+            setShowOtpVerify(true);
             return;
           }
           if (data.session) {
@@ -136,7 +147,7 @@ function ResetPassword() {
           timer = setTimeout(() => {
             supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
               if (!currentSession) {
-                setErrorMessage("No active session found. Please click the reset link in your email.");
+                setShowOtpVerify(true);
               }
             });
           }, 3000); // 3 seconds timeout to give redirect processing ample time
@@ -148,6 +159,7 @@ function ResetPassword() {
       } = supabase.auth.onAuthStateChange((event, session) => {
         if ((event === "SIGNED_IN" || event === "PASSWORD_RECOVERY") && session) {
           setSessionReady(true);
+          setShowOtpVerify(false);
           setErrorMessage(""); // Clear error if session becomes ready
         }
       });
@@ -158,6 +170,43 @@ function ResetPassword() {
       };
     }
   }, []);
+
+  async function handleOtpVerify(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setOtpError("");
+    setLoading(true);
+
+    if (!emailInput || !tokenInput) {
+      setOtpError("Email and 6-digit code are required.");
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: emailInput,
+      token: tokenInput,
+      type: "recovery",
+    });
+
+    if (error) {
+      setOtpError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (data.session) {
+      localStorage.setItem("sb-session", JSON.stringify(data.session));
+      localStorage.setItem("sb-user", JSON.stringify(data.session.user));
+      window.dispatchEvent(new Event("storage"));
+      
+      setSessionReady(true);
+      setShowOtpVerify(false);
+      setOtpError("");
+    } else {
+      setOtpError("Failed to authenticate verification session. Please try requesting a new link.");
+    }
+    setLoading(false);
+  }
 
   async function handlePasswordUpdate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -191,7 +240,7 @@ function ResetPassword() {
       <div className={style.resetCard}>
         <h2 className={style.brand}>MentorLink</h2>
         
-        {errorMessage && (
+        {errorMessage && !showOtpVerify && (
           <div className={style.errorWrapper}>
             <h3>Error</h3>
             <p className={style.message}>{errorMessage}</p>
@@ -201,11 +250,64 @@ function ResetPassword() {
           </div>
         )}
 
-        {!errorMessage && !sessionReady && (
+        {!errorMessage && !sessionReady && !showOtpVerify && (
           <div className={style.loadingWrapper}>
             <span className={style.spinnner}></span>
             <p className={style.message}>Verifying reset link, please wait...</p>
           </div>
+        )}
+
+        {showOtpVerify && !sessionReady && !resetSuccess && (
+          <>
+            <h3>Verify Reset Code</h3>
+            <p className={style.message}>
+              Outlook's link scanner may have consumed your link. Please enter your email and the 6-digit code from the email.
+            </p>
+            
+            {otpError && (
+              <p 
+                className={style.errorText} 
+                style={{ color: "#dc2626", fontWeight: 500, fontSize: "0.85rem", marginBottom: "1rem", textAlign: "center" }}
+              >
+                {otpError}
+              </p>
+            )}
+
+            <form onSubmit={handleOtpVerify} className={style.form}>
+              <div className={style.inputGroup}>
+                <label className={style.label}>Student Email</label>
+                <input
+                  className={style.input}
+                  type="email"
+                  placeholder="23ntucsfl1003@student.ntu.edu.pk"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className={style.inputGroup}>
+                <label className={style.label}>6-Digit Code</label>
+                <input
+                  className={style.input}
+                  type="text"
+                  placeholder="123456"
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  maxLength={6}
+                  required
+                />
+              </div>
+
+              <button
+                className={style.actionBtn}
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? <span className={style.spinner}></span> : "Verify Code"}
+              </button>
+            </form>
+          </>
         )}
 
         {!errorMessage && sessionReady && !resetSuccess && (
