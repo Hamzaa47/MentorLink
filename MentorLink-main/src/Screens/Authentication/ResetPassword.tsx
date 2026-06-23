@@ -199,8 +199,8 @@ function ResetPassword() {
     }
 
     const { data, error } = await supabase.auth.verifyOtp({
-      email: emailInput,
-      token: tokenInput,
+      email: emailInput.trim(),
+      token: tokenInput.trim(),
       type: "recovery",
     });
 
