@@ -24,6 +24,41 @@ function ResetPassword() {
       return;
     }
 
+    // Explicitly check for PKCE code in query parameters
+    const code = queryParams.get("code");
+    if (code) {
+      setLoading(true);
+      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      fetch(`${API_URL}/auth/exchange-code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code })
+      })
+      .then(async (res) => {
+        const json = await res.json();
+        if (res.ok && json.data?.session) {
+          const session = json.data.session;
+          localStorage.setItem("sb-session", JSON.stringify(session));
+          localStorage.setItem("sb-user", JSON.stringify(session.user));
+          
+          window.dispatchEvent(new Event("storage"));
+          
+          setSessionReady(true);
+          setErrorMessage("");
+        } else {
+          setErrorMessage(json.error || "Failed to exchange verification code. The link may have expired or already been used.");
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        setErrorMessage("Network error exchanging code: " + err.message);
+        setLoading(false);
+      });
+      return;
+    }
+
     // Explicitly parse hash fragment (common in implicit grant redirects from Supabase)
     const hash = window.location.hash;
     if (hash && hash.includes("access_token=")) {

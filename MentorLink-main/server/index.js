@@ -267,6 +267,28 @@ app.post("/api/auth/reset-password-request", async (req, res) => {
   }
 });
 
+// Exchange Code for Session (PKCE)
+app.post("/api/auth/exchange-code", async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ error: "Code is required" });
+  }
+
+  try {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    return res.json({ data });
+  } catch (err) {
+    console.error("Exchange code error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Update User Route (e.g. password)
 app.post("/api/auth/update-user", authenticateUser, async (req, res) => {
   const { password } = req.body;
