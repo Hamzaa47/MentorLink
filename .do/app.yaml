@@ -43,7 +43,7 @@ static_sites:
         value: "your-supabase-anon-key"
       - key: VITE_API_URL
         scope: BUILD_TIME
-        value: "https://ntuconnect.me/api"
+        value: "/api"
       - key: VITE_GROQ_API_KEY
         scope: BUILD_TIME
         value: "your-groq-api-key"
