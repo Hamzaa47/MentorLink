@@ -117,7 +117,6 @@ const LandingPage = () => {
   useScrollReveal();
   const [showAuth, setShowAuth] = useState(false);
   const [showMentorsModal, setShowMentorsModal] = useState(false);
-  const [showTeamModal, setShowTeamModal] = useState(false);
   const [mentorsList, setMentorsList] = useState<MentorData[]>([]);
   const [loadingMentors, setLoadingMentors] = useState(false);
   const [connectToast, setConnectToast] = useState(false);
@@ -440,85 +439,50 @@ const LandingPage = () => {
 
         {/* Footer */}
         {/* Footer */}
-        <footer className={`${style.footerContainer} hidden`}>
-          <div className={style.footerGrid}>
-            <div className={style.footerColumn}>
-              <div className={style.logo} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                <img src={logoIcon} className={style.logoImg} alt="NTUConnect Logo" style={{ height: "30px", marginRight: "8px" }} />
-                <span className={style.logoName} style={{ fontSize: "1.2rem", fontWeight: 700 }}>
-                  <a
-                    href="#"
-                    style={{ textDecoration: "none", color: "#ffffff" }}
-                  >
-                    {projectName}
-                  </a>
-                </span>
-              </div>
-              <div className={style.footerLinks}>
-                <a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</a>
-                <button onClick={() => setShowAuth(true)}>Student Portal</button>
-                <button onClick={() => {
-                  setLoadingMentors(true);
-                  setShowMentorsModal(true);
-                  supabase.from("profile").select("id, user_name, profile_picture, subjects, description").eq("role", "mentor").then(({ data }) => {
-                    if (data) {
-                      setMentorsList(data.map((m) => ({
-                        mentor_id: m.id,
-                        name: m.user_name,
-                        profile_picture: m.profile_picture,
-                        subjects: m.subjects || [],
-                        description: m.description || "",
-                      })));
-                    }
-                    setLoadingMentors(false);
-                  });
-                }}>Browse Mentors</button>
-              </div>
-            </div>
-
-            <div className={style.footerColumn}>
-              <h4>Resources</h4>
-              <div className={style.footerLinks}>
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a onClick={() => setShowAuth(true)}>Guidelines</a>
-                <a onClick={() => setShowAuth(true)}>FAQs</a>
-              </div>
-            </div>
-
-            <div className={style.footerColumn}>
-              <h4>National Development Team</h4>
-              <div className={style.footerLinks}>
-                <button onClick={() => setShowTeamModal(true)} style={{ fontWeight: 600, color: "var(--accent)" }}>
-                  Team Members
-                </button>
-              </div>
-            </div>
-
-            <div className={style.footerColumn}>
-              <h4>Region</h4>
-              <select className={style.regionSelect} defaultValue="Pakistan">
-                <option value="Pakistan">Pakistan</option>
-                <option value="International">International</option>
-              </select>
+        <footer className={`${style.footer} hidden`}>
+          <div className={style.footerLeftSide}>
+            <div className={style.logo} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <img src={logoIcon} className={style.logoImg} alt="NTUConnect Logo" style={{ height: "24px", marginRight: "6px" }} />
+              <span className={style.logoName} style={{ fontSize: "0.75rem" }}>
+                <a
+                  href="#"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {projectName}
+                </a>
+              </span>
             </div>
           </div>
 
-          <div className={style.followUsSection}>
-            <span className={style.followUsTitle}>Follow Us</span>
-            <div className={style.socialIcons}>
-              <a href="#" className={style.socialIconLink}>f</a>
-              <a href="#" className={style.socialIconLink}>♩</a>
-              <a href="#" className={style.socialIconLink}>📷</a>
-              <a href="#" className={style.socialIconLink}>▶</a>
-              <a href="#" className={style.socialIconLink}>in</a>
+          <div className={style.footerMiddleSide}>
+            <span className={style.footerSectionTitle}>Developers</span>
+            <div className={style.developerList}>
+              <div className={style.developerItem}>
+                <span className={style.developerName}>Abdul Hannan Ibrahim</span>
+                <span className={style.developerDivider}>|</span>
+                <a href="mailto:hannanibrahim609@gmail.com" className={style.developerEmail}>hannanibrahim609@gmail.com</a>
+              </div>
+              <div className={style.developerItem}>
+                <span className={style.developerName}>Abdul Mannan Ibrahim</span>
+                <span className={style.developerDivider}>|</span>
+                <a href="mailto:mannanibrahim321@gmail.com" className={style.developerEmail}>mannanibrahim321@gmail.com</a>
+              </div>
+              <div className={style.developerItem}>
+                <span className={style.developerName}>Muhammad Hamza</span>
+                <span className={style.developerDivider}>|</span>
+                <a href="mailto:hamzafaiz635@gmail.com" className={style.developerEmail}>hamzafaiz635@gmail.com</a>
+              </div>
             </div>
           </div>
 
-          <div className={style.footerDivider}></div>
-          <p className={style.footerCopyright}>
-            &copy; {new Date().getFullYear()} NTUConnect. All rights reserved.
-          </p>
+          <div className={style.footerRightSide}>
+             <p
+              className={style.featureSectionLine1}
+              style={{ fontSize: "0.75rem" }}
+            >
+              &copy; {new Date().getFullYear()} NTUConnect. All rights reserved.
+            </p>
+          </div>
         </footer>
       </div>
       {showAuth && (
@@ -602,52 +566,6 @@ const LandingPage = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-      {showTeamModal && (
-        <div className={style.modalOverlay} onClick={() => setShowTeamModal(false)}>
-          <div className={style.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px' }}>
-            <div className={style.modalHeader}>
-              <div className={style.modalHeaderLeft}>
-                <h2>National Development Team</h2>
-                <span className={style.mentorCount}>3 Members</span>
-              </div>
-              <button className={style.closeModalBtn} onClick={() => setShowTeamModal(false)}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            <div className={style.modalBody}>
-              <div className={style.teamGrid}>
-                <div className={style.teamCard}>
-                  <div className={style.teamAvatarBox}>
-                    <span className={style.teamAvatarText}>AH</span>
-                  </div>
-                  <h3 className={style.teamMemberName}>Abdul Hannan Ibrahim</h3>
-                  <p className={style.teamMemberRole}>Project Head & Lead Developer</p>
-                  <a href="mailto:hannanibrahim609@gmail.com" className={style.teamMemberEmail}>hannanibrahim609@gmail.com</a>
-                </div>
-                <div className={style.teamCard}>
-                  <div className={style.teamAvatarBox}>
-                    <span className={style.teamAvatarText}>AM</span>
-                  </div>
-                  <h3 className={style.teamMemberName}>Abdul Mannan Ibrahim</h3>
-                  <p className={style.teamMemberRole}>Full Stack Developer & Co-Lead</p>
-                  <a href="mailto:mannanibrahim321@gmail.com" className={style.teamMemberEmail}>mannanibrahim321@gmail.com</a>
-                </div>
-                <div className={style.teamCard}>
-                  <div className={style.teamAvatarBox}>
-                    <span className={style.teamAvatarText}>MH</span>
-                  </div>
-                  <h3 className={style.teamMemberName}>Muhammad Hamza</h3>
-                  <p className={style.teamMemberRole}>Backend & Frontend Developer</p>
-                  <a href="mailto:hamzafaiz635@gmail.com" className={style.teamMemberEmail}>hamzafaiz635@gmail.com</a>
-                </div>
-              </div>
             </div>
           </div>
         </div>
