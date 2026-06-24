@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../supabase-client";
+import { realtimeSupabase } from "../../supabase-client";
 import style from "./EmailVerified.module.css";
 import logoIcon from "../../assets/logo.svg";
 
@@ -10,58 +10,81 @@ function ConfirmEmail() {
   const [errorMessage, setErrorMessage] = useState(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const error = queryParams.get("error");
-    return error ? "Link expired. Please request a new one." : "";
+    return error ? "Verification link expired or already used. Please request a new one." : "";
   });
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const tokenHash = queryParams.get("token_hash");
+    const type = queryParams.get("type") || "signup";
     const error = queryParams.get("error");
 
     if (error) {
+      setErrorMessage("Verification link expired or already used. Please request a new one.");
       return;
     }
 
     if (tokenHash) {
-      supabase.auth
-          .verifyOtp({
-            token_hash: tokenHash,
-            type: "signup",
-          })
-          .then(({ data, error }) => {
-            if (error) {
-              setErrorMessage(error.message);
-              return;
+      // Use the REAL Supabase JS client (realtimeSupabase) so verifyOtp talks
+      // directly to Supabase Auth REST — this works with the anon key and
+      // correctly sets the session in the real Supabase client storage.
+      realtimeSupabase.auth
+        .verifyOtp({
+          token_hash: tokenHash,
+          type: type as "signup" | "recovery" | "email_change",
+        })
+        .then(({ data, error: verifyError }) => {
+          if (verifyError) {
+            console.error("verifyOtp error:", verifyError.message);
+            setErrorMessage(
+              verifyError.message.includes("expired") || verifyError.message.includes("invalid")
+                ? "Verification link expired or already used. Please request a new one."
+                : verifyError.message
+            );
+            return;
+          }
+          if (data?.session) {
+            // Persist session in localStorage so our custom supabase-client picks it up
+            localStorage.setItem("sb-session", JSON.stringify(data.session));
+            if (data.session.user) {
+              localStorage.setItem("sb-user", JSON.stringify(data.session.user));
             }
-            if (data.session) {
+            // Notify any other tabs that verification happened
+            window.dispatchEvent(new StorageEvent("storage", {
+              key: "sb-session",
+              newValue: JSON.stringify(data.session),
+              storageArea: localStorage,
+            }));
+            setSessionReady(true);
+          } else {
+            // Token was valid but no session (e.g., link already used once — session was set)
+            // Check if we already have a session from this verification
+            const existing = localStorage.getItem("sb-session");
+            if (existing) {
               setSessionReady(true);
+            } else {
+              setErrorMessage("Verification complete but no session was created. Try signing in.");
             }
-          });
+          }
+        });
     } else {
-      // No token_hash. Let's check if they are already signed in.
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          setSessionReady(true);
-        } else {
-          // If they aren't signed in AND have no token, they shouldn't be on this page!
-          // We will show an error instead of pretending it's verified.
-          setErrorMessage("No verification session found. Please click the link in your email.");
+      // No token_hash — check if already verified (user opened this URL manually or returned)
+      const existing = localStorage.getItem("sb-session");
+      if (existing) {
+        try {
+          const parsed = JSON.parse(existing);
+          if (parsed?.access_token) {
+            setSessionReady(true);
+            return;
+          }
+        } catch {
+          // ignore
         }
-      });
-
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          setSessionReady(true);
-          setErrorMessage(""); // Clear error if they sign in from another tab
-          subscription.unsubscribe();
-        }
-      });
-
-      return () => subscription.unsubscribe();
+      }
+      setErrorMessage("No verification token found. Please click the link in your email.");
     }
   }, []);
+
 
   return (
       <div className={style.verifyContainer}>

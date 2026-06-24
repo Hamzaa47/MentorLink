@@ -256,16 +256,23 @@ app.post("/api/auth/verify-otp", async (req, res) => {
 
 // Resend OTP / Signup Email Route
 app.post("/api/auth/resend", async (req, res) => {
-  const { type, email } = req.body;
+  const { type, email, redirectTo } = req.body;
 
   if (!type || !email) {
     return res.status(400).json({ error: "type and email are required" });
   }
 
   try {
+    const emailRedirectTo =
+      redirectTo ||
+      `${req.headers.origin || process.env.FRONTEND_URL || "http://localhost:5173"}/email-verified`;
+
     const { data, error } = await supabase.auth.resend({
       type,
-      email
+      email,
+      options: {
+        emailRedirectTo
+      }
     });
 
     if (error) {

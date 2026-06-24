@@ -15,16 +15,40 @@ function ConfirmEmail() {
   const navigate = useNavigate();
 
   const email = location.state?.email;
-  // EmailSent.tsx
+
   useEffect(() => {
+    // ─── Cross-tab detection ───────────────────────────────────────────────
+    // When the user clicks the email link in a different tab, the verification
+    // tab writes "sb-session" to localStorage. We listen here so this tab
+    // automatically navigates to /email-verified once verification is done.
+    function handleStorageChange(event: StorageEvent) {
+      if (event.key === "sb-session" && event.newValue) {
+        try {
+          const session = JSON.parse(event.newValue);
+          if (session?.access_token) {
+            navigate("/email-verified");
+          }
+        } catch {
+          // ignore malformed values
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // ─── Same-tab detection (auth state change) ───────────────────────────
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        navigate("/email-verified"); // ✅ Tab 1 bhi navigate ho jayega
+        navigate("/email-verified");
       }
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   async function handleResendEmail() {
@@ -35,14 +59,17 @@ function ConfirmEmail() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-    });
+      options: {
+        emailRedirectTo: `${window.location.origin}/email-verified`,
+      },
+    } as Parameters<typeof supabase.auth.resend>[0]);
 
     setResendLoading(false);
 
     if (error) {
       setResendError(error.message);
     } else {
-      setResendMessage("Email resent!");
+      setResendMessage("✅ Verification email resent! Check your inbox.");
     }
   }
 
@@ -53,13 +80,15 @@ function ConfirmEmail() {
         <h2 className={style.brand}>NTUConnect</h2>
         <h3>Verify your email address</h3>
         <p className={style.message}>
-          We've sent a verification link to your Outlook Email. Please check
-          your inbox and click the link to activate your account.
+          We've sent a verification link to your email. Please check your inbox
+          (and <strong>Junk / Spam</strong> folder) and click the link to
+          activate your account.
         </p>
         <div className={style.emailBox}>📩 {email}</div>
         <p className={style.note}>
-          Didn't receive the email? Check spam/junk folder or wait a few seconds
-          before requesting again.
+          If the link in the email doesn't work, try right-clicking it and
+          selecting <em>"Open link"</em>, or copy the URL and paste it in your
+          browser.
         </p>
         <button
           className={`${resendLoading ? style.spinner : style.resendBtn}`}
