@@ -43,6 +43,8 @@ const QuestionDetail = () => {
   const [subjectTestReady, setSubjectTestReady] = useState(false);
   const [mentorSubjectScore, setMentorSubjectScore] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  // Stored as state so it is set reliably at fetch time (not derived at render time)
+  const [hasMentorReplied, setHasMentorReplied] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -82,7 +84,6 @@ const QuestionDetail = () => {
             if (allMentorSubjects && allMentorSubjects.length > 0) {
               const cleanQuestionSubject = qData.subject.toLowerCase().trim();
 
-              // Evaluate matching subjects using resilient string matching rules
               const matchedSubject = allMentorSubjects.find((s) => {
                 const name = (s.course_name || "").toLowerCase().trim();
                 return (
@@ -104,32 +105,38 @@ const QuestionDetail = () => {
               setMentorSubjectScore(null);
             }
           }
-        }
 
-        // Fetch Replies with Profile Name
-        const { data: rData } = await supabase
-          .from("reply")
-          .select("*")
-          .eq("question_id", id)
-          .order("replied_at", { ascending: true });
+          // Fetch Replies with Profile Name
+          // We fetch replies inside the qData block so we have qData.student_id available
+          const { data: rData } = await supabase
+            .from("reply")
+            .select("*")
+            .eq("question_id", id)
+            .order("replied_at", { ascending: true });
 
-        if (rData) {
-          const mentorIds = rData.map((r) => r.mentor_id);
-          const { data: profileData } = await supabase
-            .from("profile")
-            .select("id, user_name")
-            .in("id", mentorIds);
+          if (rData) {
+            const mentorIds = rData.map((r) => r.mentor_id);
+            const { data: profileData } = await supabase
+              .from("profile")
+              .select("id, user_name")
+              .in("id", mentorIds);
 
-          const profileMap: Record<string, string> = {};
-          profileData?.forEach((p) => {
-            profileMap[p.id] = p.user_name;
-          });
+            const profileMap: Record<string, string> = {};
+            profileData?.forEach((p) => {
+              profileMap[p.id] = p.user_name;
+            });
 
-          const enrichedReplies = rData.map((r) => ({
-            ...r,
-            mentor_name: profileMap[r.mentor_id] || "Mentor",
-          }));
-          setReplies(enrichedReplies);
+            const enrichedReplies = rData.map((r) => ({
+              ...r,
+              mentor_name: profileMap[r.mentor_id] || "Mentor",
+            }));
+            setReplies(enrichedReplies);
+
+            // Set hasMentorReplied here where we have both rData and qData.student_id
+            // A "mentor reply" is any reply whose author is NOT the question's student
+            const mentorReplyExists = rData.some((r) => r.mentor_id !== qData.student_id);
+            setHasMentorReplied(mentorReplyExists);
+          }
         }
 
         // Check if current user liked the question
@@ -206,8 +213,7 @@ const QuestionDetail = () => {
   };
 
   const handleSubmitReply = async () => {
-    // Use direct ID comparison here — isQuestionAuthor is defined later in render
-    // so it would be undefined (falsy) if referenced here
+    // Use direct ID comparison — isQuestionAuthor is a render-time const, not available here
     const isAuthor = currentUserId === question?.student_id;
     const canReply = isAuthor || subjectTestReady;
 
@@ -255,7 +261,13 @@ const QuestionDetail = () => {
         ...data,
         mentor_name: profileData.data?.user_name || "Mentor",
       };
-      setReplies([...replies, addedReply]);
+      setReplies((prev) => [...prev, addedReply]);
+
+      // If the person who just replied is NOT the student, mark hasMentorReplied = true
+      if (currentUserId !== question?.student_id) {
+        setHasMentorReplied(true);
+      }
+
       setReplyText("");
       setShowSuccess(true);
     }
@@ -263,7 +275,6 @@ const QuestionDetail = () => {
   };
 
   const formatDate = (dateString: string) => formatFullDate(dateString);
-
   const isImage = (url: string) => /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(url);
 
   if (loading) {
@@ -283,9 +294,7 @@ const QuestionDetail = () => {
     );
   }
 
-  // These are safe to declare here in the render section
   const isQuestionAuthor = currentUserId === question.student_id;
-  const hasMentorReplied = replies.some((r) => r.mentor_id !== question.student_id);
 
   return (
     <div className={styles.pageContainer}>
@@ -324,13 +333,7 @@ const QuestionDetail = () => {
             <div className={styles.teacherInfo}>
               <div className={styles.avatar}>{question.teacher_name.charAt(0)}</div>
               <div>
-                <span
-                  style={{
-                    display: "block",
-                    fontWeight: 600,
-                    color: "var(--text-heading)",
-                  }}
-                >
+                <span style={{ display: "block", fontWeight: 600, color: "var(--text-heading)" }}>
                   {question.teacher_name}
                 </span>
                 <span>{formatDate(question.uploaded_at)}</span>
@@ -342,13 +345,7 @@ const QuestionDetail = () => {
                 className={`${styles.actionBtn} ${hasLikedQuestion ? styles.liked : ""}`}
                 onClick={handleLikeQuestion}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -378,8 +375,7 @@ const QuestionDetail = () => {
                 <div>
                   <span className={styles.replyAuthor}>{reply.mentor_name}</span>
                   <span className={styles.replyDate}>
-                    {" "}
-                    &bull; {formatDate(reply.replied_at)}
+                    {" "}&bull; {formatDate(reply.replied_at)}
                   </span>
                 </div>
               </div>
@@ -387,20 +383,11 @@ const QuestionDetail = () => {
 
               <div className={styles.actions} style={{ marginTop: 8 }}>
                 <button
-                  className={`${styles.actionBtn} ${likedReplies[reply.reply_id] ? styles.liked : ""
-                    }`}
+                  className={`${styles.actionBtn} ${likedReplies[reply.reply_id] ? styles.liked : ""}`}
                   style={{ padding: "4px 8px", fontSize: "0.85rem" }}
-                  onClick={() =>
-                    handleLikeReply(reply.reply_id, reply.likes_count || 0)
-                  }
+                  onClick={() => handleLikeReply(reply.reply_id, reply.likes_count || 0)}
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -414,9 +401,9 @@ const QuestionDetail = () => {
             </div>
           ))}
 
-          {/* 
+          {/*
             REPLY FORM LOGIC:
-            - Question author: can reply as long as at least one mentor has replied
+            - Question author: can reply only after at least one mentor has replied
             - Mentor: can reply only if they passed the subject test (score >= 50%)
             - Others: cannot reply at all
           */}
@@ -448,8 +435,7 @@ const QuestionDetail = () => {
                 <div className={styles.replyNotice}>
                   <p>
                     You must complete the expert subject test for{" "}
-                    <strong>{question.subject}</strong> and score at least 50%
-                    before replying.
+                    <strong>{question.subject}</strong> and score at least 50% before replying.
                   </p>
                   <p style={{ marginTop: 8, color: "#e2e8f0" }}>
                     {mentorSubjectScore !== null
