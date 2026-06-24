@@ -434,7 +434,7 @@
 .footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 1.5rem;
   border-top: 1.5px solid var(--border);
@@ -456,46 +456,71 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 280px;
+  gap: 0.6rem;
+  flex: 1;
+  min-width: 0;
 }
 .footerSectionTitle {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--accent);
+  margin-bottom: 0.25rem;
 }
-.developerList {
+
+/* --- Developer Mini Cards --- */
+.devCardRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  width: 100%;
+}
+.devCard {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  align-items: center;
+  background: var(--bg-section-alt, #f8f9fb);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  min-width: 140px;
+  max-width: 200px;
+  flex: 1 1 140px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-.developerItem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-body);
+.devCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
-.developerName {
-  font-weight: 600;
+.devCardName {
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--text-heading);
+  line-height: 1.3;
 }
-.developerDivider {
-  color: var(--border);
-  font-weight: 300;
-}
-.developerEmail {
+.devCardRole {
+  font-size: 0.72rem;
   color: var(--text-muted, #8a8f98);
-  text-decoration: none;
-  transition: color 0.2s ease;
+  font-weight: 400;
+  line-height: 1.3;
 }
-.developerEmail:hover {
-  color: var(--primary);
+.devCardEmail {
+  font-size: 0.7rem;
+  color: var(--primary, #3b82f6);
+  text-decoration: none;
+  font-weight: 500;
+  word-break: break-all;
+  margin-top: 0.15rem;
+  transition: color 0.15s ease;
+}
+.devCardEmail:hover {
+  color: var(--accent);
   text-decoration: underline;
 }
+
 
 /* --- Desktop/Base Styles --- */
 .logo-text-rest {
@@ -556,6 +581,27 @@
   .footerButton {
     font-size: 0.75rem; 
     padding: 0.2rem 0.5rem; 
+  }
+  .footerMiddleSide {
+    width: 100%;
+    flex: unset;
+  }
+  .devCardRow {
+    gap: 0.5rem;
+  }
+  .devCard {
+    min-width: 120px;
+    max-width: 160px;
+    padding: 0.6rem 0.75rem;
+  }
+  .devCardName {
+    font-size: 0.75rem;
+  }
+  .devCardRole {
+    font-size: 0.65rem;
+  }
+  .devCardEmail {
+    font-size: 0.63rem;
   }
   .thirdLineHero {
     display: none;

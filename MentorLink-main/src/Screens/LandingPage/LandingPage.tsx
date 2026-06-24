@@ -456,21 +456,21 @@ const LandingPage = () => {
 
           <div className={style.footerMiddleSide}>
             <span className={style.footerSectionTitle}>Developers</span>
-            <div className={style.developerList}>
-              <div className={style.developerItem}>
-                <span className={style.developerName}>Abdul Hannan Ibrahim</span>
-                <span className={style.developerDivider}>|</span>
-                <a href="mailto:hannanibrahim609@gmail.com" className={style.developerEmail}>hannanibrahim609@gmail.com</a>
+            <div className={style.devCardRow}>
+              <div className={style.devCard}>
+                <span className={style.devCardName}>Abdul Hannan Ibrahim</span>
+                <span className={style.devCardRole}>Project Lead & Developer</span>
+                <a href="mailto:hannanibrahim609@gmail.com" className={style.devCardEmail}>hannanibrahim609@gmail.com</a>
               </div>
-              <div className={style.developerItem}>
-                <span className={style.developerName}>Abdul Mannan Ibrahim</span>
-                <span className={style.developerDivider}>|</span>
-                <a href="mailto:mannanibrahim321@gmail.com" className={style.developerEmail}>mannanibrahim321@gmail.com</a>
+              <div className={style.devCard}>
+                <span className={style.devCardName}>Abdul Mannan Ibrahim</span>
+                <span className={style.devCardRole}>Full Stack Developer</span>
+                <a href="mailto:mannanibrahim321@gmail.com" className={style.devCardEmail}>mannanibrahim321@gmail.com</a>
               </div>
-              <div className={style.developerItem}>
-                <span className={style.developerName}>Muhammad Hamza</span>
-                <span className={style.developerDivider}>|</span>
-                <a href="mailto:hamzafaiz635@gmail.com" className={style.developerEmail}>hamzafaiz635@gmail.com</a>
+              <div className={style.devCard}>
+                <span className={style.devCardName}>Muhammad Hamza</span>
+                <span className={style.devCardRole}>Backend Developer</span>
+                <a href="mailto:hamzafaiz635@gmail.com" className={style.devCardEmail}>hamzafaiz635@gmail.com</a>
               </div>
             </div>
           </div>
