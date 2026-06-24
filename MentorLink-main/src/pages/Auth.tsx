@@ -47,10 +47,10 @@ function Auth({ onClose }: Props) {
         return;
       }
 
-      // Supabase returns HTTP 200 even for existing emails to prevent enumeration.
-      // However, an already-registered email comes back with an empty identities array.
+      // Supabase silently returns 200 for already-registered emails.
+      // An existing account comes back with an empty identities array.
       if (data.user && data.user.identities && data.user.identities.length === 0) {
-        setErrorMessage("An account with this email already exists.");
+        setErrorMessage("Email already registered. Please sign in instead.");
         setLoading(false);
         return;
       }
@@ -60,6 +60,7 @@ function Auth({ onClose }: Props) {
       setPassword("");
       setLoading(false);
       return;
+
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -71,17 +72,15 @@ function Auth({ onClose }: Props) {
         setLoading(false);
         return;
       }
-      navigate("/dashboard")
-      setLoading(false);
 
+      navigate("/dashboard");
+      setLoading(false);
     }
   }
+
   return (
     <>
-
-
       <div className={style.loginContainer}>
-
         <div className={`${style.loginCard}`}>
           <div className={style.closeBtn}>
             <button onClick={onClose}>X</button>
@@ -128,7 +127,7 @@ function Auth({ onClose }: Props) {
                 disabled={loading}
               >
                 {loading ? (
-                  <span className="spinnner"></span>
+                  <span className="spinner"></span>
                 ) : isSignUp ? (
                   "Sign Up"
                 ) : (
@@ -144,14 +143,17 @@ function Auth({ onClose }: Props) {
                   : "Don't have an account?"}
               </small>
 
-              <button type="button" className={style.signInButton} onClick={() => setIsSignUp((p) => !p)}>
+              <button
+                type="button"
+                className={style.signInButton}
+                onClick={() => setIsSignUp((p) => !p)}
+              >
                 {isSignUp ? "Sign In" : "Sign Up"}
               </button>
             </div>
           </form>
         </div>
       </div>
-
     </>
   );
 }
