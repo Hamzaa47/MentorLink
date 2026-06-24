@@ -126,7 +126,7 @@ const QuestionCard = ({
         <div className={styles.questionFooter}>
           <div className={styles.metaRow}>
             <span>
-              {safeTeacherName} • {formatDate(uploadedAt)}
+              Teacher: {safeTeacherName} • {formatDate(uploadedAt)}
             </span>
           </div>
           {fileUpload && (
@@ -240,7 +240,7 @@ const QuestionCard = ({
                       </div>
                       <div className={styles.teacherText}>
                         <span className={styles.profName}>
-                          {safeTeacherName}
+                          Teacher: {safeTeacherName}
                         </span>
                         <span className={styles.uploadInfo}>
                           Uploaded on {formatDate(uploadedAt)}
