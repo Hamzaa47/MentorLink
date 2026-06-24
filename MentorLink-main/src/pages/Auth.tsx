@@ -10,22 +10,22 @@ import { Eye, EyeOff } from "lucide-react";
 
 
 
-type Props={
-  onClose:()=>void
+type Props = {
+  onClose: () => void
 }
 
 
-function Auth({onClose}:Props) {
+function Auth({ onClose }: Props) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
- 
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const navigate=useNavigate();
-    
+  const navigate = useNavigate();
+
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,7 +33,7 @@ function Auth({onClose}:Props) {
     setErrorMessage("");
 
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -47,7 +47,14 @@ function Auth({onClose}:Props) {
         return;
       }
 
-      // Server returns HTTP 200 for new & unconfirmed emails, 400 for confirmed accounts.
+      // Supabase returns HTTP 200 even for existing emails to prevent enumeration.
+      // However, an already-registered email comes back with an empty identities array.
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setErrorMessage("An account with this email already exists.");
+        setLoading(false);
+        return;
+      }
+
       navigate("/email-sent", { state: { email } });
       setEmail("");
       setPassword("");
@@ -64,87 +71,87 @@ function Auth({onClose}:Props) {
         setLoading(false);
         return;
       }
-        navigate("/dashboard")
-        setLoading(false);
-    
-  }
+      navigate("/dashboard")
+      setLoading(false);
+
+    }
   }
   return (
     <>
- 
 
-        <div className={style.loginContainer}>
 
-          <div className={`${style.loginCard}`}>
-            <div className={style.closeBtn}>
+      <div className={style.loginContainer}>
+
+        <div className={`${style.loginCard}`}>
+          <div className={style.closeBtn}>
             <button onClick={onClose}>X</button>
           </div>
-            <img src={logoIcon} className={style.logoImg} alt="NTUConnect Logo" />
-            <h2>NTUConnect</h2>
+          <img src={logoIcon} className={style.logoImg} alt="NTUConnect Logo" />
+          <h2>NTUConnect</h2>
 
-            <form onSubmit={handleSubmit}>
-              <div className={style.inputForm}>
+          <form onSubmit={handleSubmit}>
+            <div className={style.inputForm}>
+              <input
+                type="email"
+                placeholder="e.g. 23ntucsfl1000@student.edu.pk"
+                value={email}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
+              />
+
+              <div className={style.passwordWrapper}>
                 <input
-                  type="email"
-                  placeholder="e.g. 23ntucsfl1000@student.edu.pk"
-                  value={email}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
+                    setPassword(e.target.value)
                   }
                 />
 
-                <div className={style.passwordWrapper}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setPassword(e.target.value)
-                    }
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((p) => !p)}
-                  >
-                    {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                  </button>
-                </div>
-
-                {errorMessage && (
-                  <p className={style.error}>{errorMessage}</p>
-                )}
-
                 <button
-                  className={loading  ? "spinner" : style.signInButton}
-                  type="submit"
-                  disabled={loading}
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
                 >
-                  {loading ? (
-                    <span className="spinnner"></span>
-                  ) : isSignUp ? (
-                    "Sign Up"
-                  ) : (
-                    "Sign In"
-                  )}
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                 </button>
               </div>
 
-              <div className={style.footer}>
-                <small>
-                  {isSignUp
-                    ? "Already have an account?"
-                    : "Don't have an account?"}
-                </small>
+              {errorMessage && (
+                <p className={style.error}>{errorMessage}</p>
+              )}
 
-                <button type="button" className={style.signInButton} onClick={() => setIsSignUp((p) => !p)}>
-                  {isSignUp ? "Sign In" : "Sign Up"}
-                </button>
-              </div>
-            </form>
-          </div>
+              <button
+                className={loading ? "spinner" : style.signInButton}
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="spinnner"></span>
+                ) : isSignUp ? (
+                  "Sign Up"
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </div>
+
+            <div className={style.footer}>
+              <small>
+                {isSignUp
+                  ? "Already have an account?"
+                  : "Don't have an account?"}
+              </small>
+
+              <button type="button" className={style.signInButton} onClick={() => setIsSignUp((p) => !p)}>
+                {isSignUp ? "Sign In" : "Sign Up"}
+              </button>
+            </div>
+          </form>
         </div>
-    
+      </div>
+
     </>
   );
 }
