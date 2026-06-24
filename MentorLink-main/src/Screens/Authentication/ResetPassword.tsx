@@ -201,7 +201,7 @@ function ResetPassword() {
       return;
     }
 
-    let session = null;
+    let session: any = null;
     let errorMsg = "";
 
     // 1. If it looks like a long token hash or code (more than 10 characters)
