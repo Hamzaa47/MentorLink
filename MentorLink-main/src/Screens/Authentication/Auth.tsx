@@ -26,8 +26,8 @@ function Auth({ onClose }: Props) {
   const navigate = useNavigate();
 
   function isValidStudentEmail(email: string) {
-    // Allows: 23ntucsfl1003 or 23ntuctl1003 or any cs|ct variant
-    const regex = /^(2[0-9])ntu(cs|ct)[a-z]*\d{4}@student\.ntu\.edu\.pk$/i;
+    // Accepts: 23ntucsfl1003 or 23ntuctfl1003 (cs or ct, then fl, then exactly 4 digits)
+    const regex = /^(2[0-9])ntu(cs|ct)fl\d{4}@student\.ntu\.edu\.pk$/i;
     return regex.test(email.trim());
   }
 
@@ -74,7 +74,7 @@ function Auth({ onClose }: Props) {
 
     if (!isValidStudentEmail(email)) {
       setErrorMessage(
-        "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
+        "Invalid email format. Use: 23ntu(cs|ct)fl1003@student.ntu.edu.pk"
       );
       setLoading(false);
       return;
