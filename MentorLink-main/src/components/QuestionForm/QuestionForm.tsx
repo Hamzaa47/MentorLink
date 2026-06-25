@@ -214,7 +214,7 @@ const AskQuestionForm = ({ isOpen, onClose, onQuestionPosted }: Props) => {
         .from("mentor_subjects")
         .select("mentor_id")
         .eq("course_name", subject);
-        
+
       if (!mentorsError && mentorsData && mentorsData.length > 0) {
         const notifications = mentorsData.map(m => ({
           recipient_id: m.mentor_id,
@@ -222,7 +222,7 @@ const AskQuestionForm = ({ isOpen, onClose, onQuestionPosted }: Props) => {
           question_id: questionData.question_id,
           type: "new_question"
         }));
-        
+
         await supabase.from("notification").insert(notifications);
       }
     }
@@ -302,7 +302,7 @@ const AskQuestionForm = ({ isOpen, onClose, onQuestionPosted }: Props) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6}}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
               <small className={styles.charCount}>{description.length} / 2000</small>
               {error ? <small className={styles.errorText}>{error}</small> : null}
             </div>
