@@ -10,6 +10,7 @@ function Profile() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -56,9 +57,6 @@ function Profile() {
         setDepartment(data.department || "");
         setBatch(data.batch || "");
         setTechnology(data.technology || "");
-        // setSubject1(data.subject1 || "");
-        // setSubject2(data.subject2 || "");
-        // setSubject3(data.subject3 || "");
         setProfileImage(data.profile_image || "");
       }
     };
@@ -79,51 +77,61 @@ function Profile() {
     const { error } = await supabase.from("profile").insert([
       {
         id: userData.user.id,
-        name:name,
-        user_name:username,
+        name: name,
+        user_name: username,
         profile_picture: signedUrl,
         university_email: userData.user.email,
-        university_name:university,
-        department:department,
-        technology:technology,
-        batch:batch,
+        university_name: university,
+        department: department,
+        technology: technology,
+        batch: batch,
       },
     ]);
 
-    await supabase.from("student_subject").insert([{
-        
-    }])
     if (error) {
       console.log(error.message);
+      setLoading(false);
     } else {
+      await insertSubject();
       navigate("/dashboard");
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const insertSubject = async () => {
-        const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
       console.log("No user Found");
-      setLoading(false);
       return;
     }
 
-    const subjectToINsert=  difficultSubjects.map((subject)=>({
-          student_id:userData?.user.id,
-          course_name:subject
-  }))
+    const subjectToInsert = difficultSubjects.map((subject) => ({
+      student_id: userData?.user.id,
+      course_name: subject,
+    }));
 
-  const { data, error } = await supabase
-    .from('student_subjects')
-    .insert(subjectToINsert);
+    const { data, error } = await supabase
+      .from("student_subjects")
+      .insert(subjectToInsert);
 
-  if (error) {
-    console.log('Error:', error.message);
-  } else {
-    console.log('Inserted:', data);
-  }
-};
+    if (error) {
+      console.log("Error:", error.message);
+    } else {
+      console.log("Inserted:", data);
+    }
+  };
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (difficultSubjects.length < 3) {
+      setFormError("Please select at least 3 difficult subjects to continue.");
+      return;
+    }
+
+    setFormError("");
+    handleSubmit(e);
+  };
 
   return (
     <div className={style.profileContainer}>
@@ -131,11 +139,7 @@ function Profile() {
         <h2>NTUConnect</h2>
         <h1>Complete Your Profile</h1>
 
-        <form action="" className={style.form} onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(e);
-          insertSubject();
-        }}>
+        <form className={style.form} onSubmit={handleFormSubmit}>
           <UploadImage
             onUpload={(path) => {
               console.log("Url: ", path);
@@ -143,7 +147,6 @@ function Profile() {
             }}
             currentImage={profileImage}
             previewUrl={signedUrl}
-
           />
 
           <div className={style.inputDiv}>
@@ -166,8 +169,7 @@ function Profile() {
           </div>
 
           <div className={style.inputDiv}>
-            <label className={style["input-heading"]} >UserName</label>
-
+            <label className={style["input-heading"]}>UserName</label>
             <input
               type="text"
               placeholder="UserName"
@@ -182,7 +184,6 @@ function Profile() {
 
           <div className={style.inputDiv}>
             <label className={style["input-heading"]}>University</label>
-
             <input
               type="text"
               placeholder="University Name"
@@ -195,7 +196,6 @@ function Profile() {
 
           <div className={style.inputDiv}>
             <label className={style["input-heading"]}>Department</label>
-
             <select
               name="department"
               id="department"
@@ -205,25 +205,16 @@ function Profile() {
                 setDepartment(e.target.value);
               }}
             >
-              <option value ="" hidden >Select Department</option>
-              <option value="DCS" >
-                Computer Science
-              </option>
-              <option value="FD" disabled>
-                Fashion Design
-              </option>
-              <option value="Textile" disabled>
-                Textile Engineering
-              </option>
-              <option value="DAS" disabled>
-                Applied Sciences
-              </option>
+              <option value="" hidden>Select Department</option>
+              <option value="DCS">Computer Science</option>
+              <option value="FD" disabled>Fashion Design</option>
+              <option value="Textile" disabled>Textile Engineering</option>
+              <option value="DAS" disabled>Applied Sciences</option>
             </select>
           </div>
 
           <div className={style.inputDiv}>
             <label className={style["input-heading"]}>Batch</label>
-
             <input
               type="text"
               placeholder="e.g. 2023"
@@ -238,7 +229,6 @@ function Profile() {
 
           <div className={style.inputDiv}>
             <label className={style["input-heading"]}>Technology</label>
-
             <select
               name="technology"
               id="technology"
@@ -248,11 +238,8 @@ function Profile() {
                 setTechnology(e.target.value);
               }}
             >
-
-              <option value ="" hidden  >Select Technology</option>
-              <option value="CS" >
-                CS
-              </option>
+              <option value="" hidden>Select Technology</option>
+              <option value="CS">CS</option>
               <option value="SE">SE</option>
               <option value="AI">AI</option>
               <option value="CET">CET</option>
@@ -261,20 +248,65 @@ function Profile() {
 
           <div className={style.inputDiv}>
             <label className={style["input-heading"]}>Difficult Subjects</label>
-
             <div className={style.wrapper}>
-              <SubjectSearch onChange={setDifficultSubjects} />
+              <SubjectSearch onChange={(subjects) => {
+                setDifficultSubjects(subjects);
+                // Clear warning as soon as user selects 3+
+                if (subjects.length >= 3) {
+                  setFormError("");
+                }
+              }} />
             </div>
+
+            {/* Subject count indicator */}
+            <p style={{
+              fontSize: "0.78rem",
+              marginTop: "6px",
+              color: difficultSubjects.length >= 3 ? "#22c55e" : "#f59e0b",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px"
+            }}>
+              {difficultSubjects.length >= 3
+                ? `✓ ${difficultSubjects.length} subjects selected`
+                : `${difficultSubjects.length}/3 selected — please select at least 3`}
+            </p>
+
+            {/* Warning message shown on submit attempt */}
+            {formError && (
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backgroundColor: "#fff7ed",
+                border: "1px solid #f59e0b",
+                borderRadius: "6px",
+                padding: "8px 12px",
+                marginTop: "6px",
+              }}>
+                <span style={{ fontSize: "1rem" }}>⚠️</span>
+                <p style={{
+                  color: "#b45309",
+                  fontSize: "0.82rem",
+                  margin: 0,
+                }}>
+                  {formError}
+                </p>
+              </div>
+            )}
           </div>
+
           <button
             type="submit"
             className={loading ? "spinner" : style.submitBtn}
+            disabled={loading}
           >
-            {loading ? <span className="spinnner"></span> : "Save & Continue"}
+            {loading ? <span className="spinner"></span> : "Save & Continue"}
           </button>
         </form>
       </div>
     </div>
   );
 }
+
 export default Profile;
