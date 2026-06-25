@@ -24,7 +24,8 @@ type Props = {
   const navigate = useNavigate();
 
   function isValidStudentEmail(email: string) {
-    const regex = /^(2[0-9])ntucsfl\d{4}@student\.ntu\.edu\.pk$/;
+    const regex = /^(2[0-9])ntu(cs|ct)fl\d{4}@student\.ntu\.edu\.pk$/;
+
     return regex.test(email);
   }
 
