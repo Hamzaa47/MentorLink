@@ -1,6 +1,7 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from "react";
 import styles from "./QuestionForm.module.css";
 import { supabase } from "../../supabase-client";
+import Select from "react-select";
 
 const subjects = [
   "Advanced Database Systems",
@@ -63,6 +64,12 @@ const subjects = [
   "Theory of Programming Languages",
   "Web Engineering",
 ].sort();
+
+const subjectOptions = subjects.map((subject) => ({
+  value: subject,
+  label: subject,
+}));
+
 
 type Props = {
   isOpen: boolean;
@@ -248,22 +255,28 @@ const AskQuestionForm = ({ isOpen, onClose, onQuestionPosted }: Props) => {
         <h2 className={styles.title}>Ask a Question</h2>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputGroup}>
-            <label htmlFor="subjectInput">Subject</label>
-            <input
-              id="subjectInput"
-              list="subjectOptions"
-              type="text"
+            <label>Subject</label>
+
+            <Select
+              options={subjectOptions}
               placeholder="Search subject..."
-              className={styles.inputField}
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              autoComplete="off"
+              value={
+                subject
+                  ? { value: subject, label: subject }
+                  : null
+              }
+              onChange={(selectedOption) =>
+                setSubject(selectedOption?.value || "")
+              }
+              isSearchable
+              className={styles.selectWrapper}
+              classNamePrefix="subjectSelect"
             />
-            <datalist id="subjectOptions">
-              {subjects.map((sub, i) => (
-                <option key={i} value={sub} />
-              ))}
-            </datalist>
+
+            {mentorCheckLoading && (
+              <small>Checking mentors...</small>
+            )}
+
             {noMentorRegistered && (
               <div className={styles.mentorWarning}>
                 ⚠️ Any mentor of this subject is not registered yet.
