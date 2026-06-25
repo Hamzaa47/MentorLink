@@ -110,15 +110,15 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 
   try {
-    // Step 1: Check if a CONFIRMED account already exists for this email.
-    // The updated check_email_exists function only returns true for confirmed users.
+    // Step 1: Check if an account already exists for this email.
+    // The check_email_exists function returns true if the email exists in auth.users.
     // If the function is missing (PGRST202), we skip this check and rely on signUp.
     const { data: isConfirmed, error: checkError } = await supabase
       .rpc("check_email_exists", { email_to_check: email });
 
     if (!checkError && isConfirmed === true) {
-      // Email belongs to a fully confirmed account — block signup
-      return res.status(400).json({ error: "Email already registered. Please sign in." });
+      // Email belongs to an already registered account — block signup
+      return res.status(400).json({ error: "Email is already registered. Please sign in." });
     }
 
     if (checkError) {

@@ -8,8 +8,7 @@ AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM auth.users 
-    WHERE email = email_to_check 
-      AND email_confirmed_at IS NOT NULL
+    WHERE email = email_to_check
   );
 END;
 $$ LANGUAGE plpgsql;

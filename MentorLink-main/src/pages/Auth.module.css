@@ -1,29 +1,30 @@
-.loginContainer{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-    padding: 1rem;
-}
-.loginCard{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
-    color: var(--primary);
-    width: min(100%, 365px);
-    padding: 0.9rem 0.9rem;
-    background-color: var(--bg-surface);
-    border-radius: 12px;
-    border: 1px solid rgb(96, 93, 93);
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 1rem;
 }
 
-.loginCard h2{
-   padding: 0 0.2rem;
-   text-align: center;
-   font-weight: 500;
+.loginCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  color: var(--primary);
+  width: min(100%, 365px);
+  padding: 0.9rem 0.9rem;
+  background-color: var(--bg-surface);
+  border-radius: 12px;
+  border: 1px solid rgb(96, 93, 93);
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.loginCard h2 {
+  padding: 0 0.2rem;
+  text-align: center;
+  font-weight: 500;
 }
 
 .logoImg {
@@ -33,27 +34,29 @@
   display: block;
 }
 
-.inputForm{
-    display:flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
-     width: 100%;
-    margin-top: 0;
+.inputForm {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  margin-top: 0;
 }
-.inputForm input{
-    height: 2.8rem;
-    width: 100%;
-    max-width: 600px;
-    margin: 0.4rem 0;
-    padding: 0 0.75rem;
-    border-radius: 5px;
-    border: 1px solid black;
-    outline: none;
-    font-size: 0.8rem;
-    box-sizing: border-box;
+
+.inputForm input {
+  height: 2.8rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0.4rem 0;
+  padding: 0 0.75rem;
+  border-radius: 5px;
+  border: 1px solid black;
+  outline: none;
+  font-size: 0.8rem;
+  box-sizing: border-box;
 
 }
+
 /* .signInButton{
   align-self: center;
  width: clamp(80px, 15vw, 140px);
@@ -69,12 +72,13 @@
   font-weight: 600;
 } */
 
-.signInButton,.signUpBtn {
+.signInButton,
+.signUpBtn {
 
   align-self: center;
- width: clamp(80px, 15vw, 140px);
+  width: clamp(80px, 15vw, 140px);
   color: var(--primary);
-    outline: none;
+  outline: none;
   border: 0;
   background-color: transparent;
   cursor: pointer;
@@ -85,6 +89,7 @@
   height: 2rem;
   transition: transform 0.3s ease;
 }
+
 .signInButton:hover {
   background-color: var(--primary);
   color: var(--text-white);
@@ -92,19 +97,22 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-.footer{
+.footer {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;        /* wraps to next line if too narrow */
+  flex-wrap: wrap;
+  /* wraps to next line if too narrow */
   gap: 0.5rem;
   margin-top: 1rem;
   padding-bottom: 0.5rem;
 }
-.footer small{
-    text-align: center;
-    color:rgb(186, 184, 183);
+
+.footer small {
+  text-align: center;
+  color: rgb(186, 184, 183);
 }
+
 /* .footer button{
   width: clamp(70px, 12vw, 100px);
   height: 2.5rem;
@@ -136,65 +144,69 @@
   }
 }
 
-.blur{
+.blur {
   filter: blur(5px);
 
 }
 
-.overlay{
-   position: fixed;
-   top: 0;
-   left: 0;
-   width: 100%;
-   height: 100%;
-   z-index: 9999;
-   background: rgba(0,0,0,0.4); 
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   }
-   .passwordWrapper{
-    display: flex;
-    position: relative;
-    align-items: center;
-   }
-   .passwordWrapper input{
-    width: 100%;
-    padding-right: 40px;
-   }
-   
-   .passwordWrapper button{
-    position: absolute;
-    right: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-   
-   }
-   .closeBtn{
-    display: flex;
-    justify-content: flex-end;
-    font-family:'Times New Roman', Times, serif;
-    padding: 0;
-    margin: 0;
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-   }
-   .closeBtn button{
-    font-family:Verdana, Geneva, Tahoma, sans-serif;
-    background-color: var(--highlight);
-    color: rgba(255, 255, 255, 0.74);
-    border: none;
-    height: 1.5rem;
-    font-size:x-small;
-    text-align: center;
-    
-    width: 1.5rem;
-    border-radius: 5px;
-    cursor: pointer;
-        transition: transform 0.2s ease-out;
-   }
-   .closeBtn button:hover{
-    transform:scale(1.2)
-   
-   }
+.passwordWrapper {
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+
+.passwordWrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.passwordWrapper button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+
+}
+
+.closeBtn {
+  display: flex;
+  justify-content: flex-end;
+  font-family: 'Times New Roman', Times, serif;
+  padding: 0;
+  margin: 0;
+
+}
+
+.closeBtn button {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  background-color: var(--highlight);
+  color: rgba(255, 255, 255, 0.74);
+  border: none;
+  height: 1.5rem;
+  font-size: x-small;
+  text-align: center;
+
+  width: 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s ease-out;
+}
+
+.closeBtn button:hover {
+  transform: scale(1.2)
+}
