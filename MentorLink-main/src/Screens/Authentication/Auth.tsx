@@ -1,4 +1,4 @@
-// Auth.tsx
+// Auth.tsx (version 1 - with forgot password)
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase-client";
@@ -14,21 +14,21 @@ type Props = {
 
 function Auth({ onClose }: Props) {
   const [view, setView] = useState<"auth" | "forgot">("auth");
-  const [isSignUp, setIsSignUp] = useState<boolean>(false);
-  const [email, setEmail] = useState<string>((""));
-  const [password, setPassword] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [forgotSuccess, setForgotSuccess] = useState<boolean>(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
 
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   function isValidStudentEmail(email: string) {
-    const regex = /^(2[0-9])ntu(cs|ct)fl\d{4}@student\.ntu\.edu\.pk$/;
-
-    return regex.test(email);
+    // Allows: 23ntucsfl1003 or 23ntuctl1003 or any cs|ct variant
+    const regex = /^(2[0-9])ntu(cs|ct)[a-z]*\d{4}@student\.ntu\.edu\.pk$/i;
+    return regex.test(email.trim());
   }
 
   async function handleForgotSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -44,13 +44,12 @@ function Auth({ onClose }: Props) {
 
     if (!isValidStudentEmail(email)) {
       setErrorMessage(
-        "Invalid email format. Use a valid NTU CS or CT email address."
+        "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
       );
       setLoading(false);
       return;
     }
 
-    // Save to local storage for automatic prefill on the same device
     localStorage.setItem("reset-email-input", email);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -64,7 +63,8 @@ function Auth({ onClose }: Props) {
     }
 
     setLoading(false);
-    setForgotSuccess(true);
+    onClose();
+    navigate("/reset-password");
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -72,15 +72,15 @@ function Auth({ onClose }: Props) {
     setLoading(true);
     setErrorMessage("");
 
-    if (isSignUp) {
-      if (!isValidStudentEmail(email)) {
-        setErrorMessage(
-          "Invalid email format. Use a valid NTU CS or CT email address."
-        );
-        setLoading(false);
-        return;
-      }
+    if (!isValidStudentEmail(email)) {
+      setErrorMessage(
+        "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
+      );
+      setLoading(false);
+      return;
+    }
 
+    if (isSignUp) {
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -227,7 +227,6 @@ function Auth({ onClose }: Props) {
                 : "Sign in to your student account to connect with mentors."}
             </p>
 
-            {/* Tab Switcher */}
             <div className={style.tabContainer}>
               <button
                 type="button"

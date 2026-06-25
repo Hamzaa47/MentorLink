@@ -1,4 +1,4 @@
-// Auth.tsx
+// Auth.tsx (version 2 - simple)
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase-client";
@@ -23,23 +23,22 @@ function Auth({ onClose }: Props) {
 
   const navigate = useNavigate();
 
+  function isValidStudentEmail(email: string) {
+    // Allows: 23ntucsfl1003 or 23ntuctfl1003 (cs or ct)
+    const regex = /^(2[0-9])ntu(cs|ct)[a-z]*\d{4}@student\.ntu\.edu\.pk$/i;
+    return regex.test(email.trim());
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
 
-    // remove spaces
     const cleanEmail = email.replace(/\s/g, "");
 
-    // ✅ UPDATED NTU FORMAT: cs OR ct
-    const isValidStudentEmail =
-      /^[0-9]{2}ntu(cs|ct)[a-z]*[0-9]+@student\.ntu\.edu\.pk$/i.test(
-        cleanEmail
-      );
-
-    if (!isValidStudentEmail) {
+    if (!isValidStudentEmail(cleanEmail)) {
       setErrorMessage(
-        "Invalid NTU email format. Example: 23ntucsfl1002@student.ntu.edu.pk"
+        "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
       );
       setLoading(false);
       return;
