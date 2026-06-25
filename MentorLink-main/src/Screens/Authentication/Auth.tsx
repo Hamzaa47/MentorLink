@@ -10,9 +10,7 @@ import { Eye, EyeOff, X } from "lucide-react";
 
 type Props = {
   onClose: () => void;
-};
-
-function Auth({ onClose }: Props) {
+}; function Auth({ onClose }: Props) {
   const [view, setView] = useState<"auth" | "forgot">("auth");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -25,32 +23,64 @@ function Auth({ onClose }: Props) {
 
   const navigate = useNavigate();
 
-  // ✅ normalize email (remove spaces)
-  const normalizeEmail = (email: string) => email.replace(/\s/g, "").toLowerCase();
+  function isValidStudentEmail(email: string) {
+    const regex = /^(2[0-9])ntucsfl\d{4}@student\.ntu\.edu\.pk$/;
+    return regex.test(email);
+  }
 
-  // ✅ NTU email validation (cs or ct only)
-  const isValidStudentEmail = (email: string) =>
-    /^[0-9]{2}ntu(cs|ct)[a-z]*[0-9]+@student\.ntu\.edu\.pk$/.test(email);
-
-  // ---------------- SIGN UP / SIGN IN ----------------
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleForgotSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
 
-    const cleanEmail = normalizeEmail(email);
+    if (!email) {
+      setErrorMessage("Email is required.");
+      setLoading(false);
+      return;
+    }
 
-    if (!isValidStudentEmail(cleanEmail)) {
+    if (!isValidStudentEmail(email)) {
       setErrorMessage(
-        "Invalid NTU email format. Example: 23ntucsfl1002@student.ntu.edu.pk"
+        "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
       );
       setLoading(false);
       return;
     }
 
+    // Save to local storage for automatic prefill on the same device
+    localStorage.setItem("reset-email-input", email);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    onClose(); // Close the login modal
+    navigate("/reset-password"); // Redirect directly to the verification screen
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage("");
+
     if (isSignUp) {
+      if (!isValidStudentEmail(email)) {
+        setErrorMessage(
+          "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
+        );
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
-        email: cleanEmail,
+        email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/email-verified`,
@@ -63,188 +93,252 @@ function Auth({ onClose }: Props) {
         return;
       }
 
-      navigate("/email-sent", { state: { email: cleanEmail } });
+      // Server returns HTTP 200 for:
+      //   1. Brand new email → account created, verification email sent
+      //   2. Unconfirmed email → verification email re-sent
+      // Server returns HTTP 400 (caught above as `error`) for confirmed accounts.
+      // So any 200 response means: navigate to email-sent.
+      navigate("/email-sent", { state: { email } });
       setEmail("");
       setPassword("");
       setLoading(false);
       return;
-    }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
-      password,
-    });
-
-    if (error) {
-      setErrorMessage(error.message);
-      setLoading(false);
-      return;
-    }
-
-    navigate("/student", { replace: true });
-    setLoading(false);
-  }
-
-  // ---------------- FORGOT PASSWORD ----------------
-  async function handleForgotSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
-
-    const cleanEmail = normalizeEmail(email);
-
-    if (!isValidStudentEmail(cleanEmail)) {
-      setErrorMessage(
-        "Invalid email format. Example: 23ntucsfl1002@student.ntu.edu.pk"
-      );
-      setLoading(false);
-      return;
-    }
-
-    localStorage.setItem("reset-email-input", cleanEmail);
-
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      cleanEmail,
-      {
-        redirectTo: `${window.location.origin}/reset-password`,
+      if (error) {
+        setErrorMessage(error.message);
+        setLoading(false);
+        return;
       }
-    );
-
-    if (error) {
-      setErrorMessage(error.message);
+      navigate("/student", { replace: true });
       setLoading(false);
-      return;
     }
-
-    setLoading(false);
-    setForgotSuccess(true);
   }
-
-  // ---------------- UI ----------------
   return (
     <div className={style.overlay}>
       <div className={style.loginCard}>
         <div className={style.closeBtn}>
-          <button onClick={onClose}>
+          <button type="button" onClick={onClose} aria-label="Close modal">
             <X size={16} />
           </button>
         </div>
 
         {view === "forgot" ? (
           <>
-            <img src={logoIcon} className={style.logoImg} />
+            <img src={logoIcon} className={style.logoImg} alt="NTUConnect Logo" />
             <h2 className={style.title}>Reset Password</h2>
-
             {!forgotSuccess ? (
-              <form onSubmit={handleForgotSubmit} className={style.form}>
-                <input
-                  className={style.input}
-                  type="email"
-                  placeholder="23ntucsfl1002@student.ntu.edu.pk"
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
-                  required
-                />
+              <>
+                <p className={style.subtitle}>
+                  Enter your student email and we'll send you a link to reset your password.
+                </p>
 
-                {errorMessage && (
-                  <p className={style.error}>{errorMessage}</p>
-                )}
+                <form onSubmit={handleForgotSubmit} className={style.form}>
+                  <div className={style.inputGroup}>
+                    <label className={style.label}>Student Email</label>
+                    <input
+                      className={style.input}
+                      type="email"
+                      placeholder="23ntucsfl1003@student.ntu.edu.pk"
+                      value={email}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setEmail(e.target.value)
+                      }
+                      autoComplete="email"
+                      required
+                    />
+                    {errorMessage && <p className={style.error}>{errorMessage}</p>}
+                  </div>
 
-                <button className={style.submitBtn} disabled={loading}>
-                  {loading ? "Sending..." : "Send Reset Link"}
-                </button>
+                  <button
+                    className={style.submitBtn}
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <span className={style.spinner}></span>
+                    ) : (
+                      "Send Reset Link"
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={style.backToLoginBtn}
+                    onClick={() => {
+                      setView("auth");
+                      setErrorMessage("");
+                    }}
+                  >
+                    Back to Sign In
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className={style.successState}>
+                <div className={style.successIconWrapper}>
+                  <svg className={style.circleSvg} viewBox="0 0 52 52" style={{ width: 64, height: 64, margin: "1.5rem auto" }}>
+                    <circle className={style.circle} cx="26" cy="26" r="22" stroke="#22c55e" strokeWidth="3" fill="none" />
+                    <path className={style.check} d="M14 27 l8 8 l16 -16" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  </svg>
+                </div>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "1rem 0" }}>Check Your Inbox</h3>
+                <p className={style.subtitle}>
+                  We've sent a password reset code to <strong>{email}</strong>. Please check your inbox (including Junk folder) for the code.
+                </p>
 
                 <button
                   type="button"
-                  onClick={() => setView("auth")}
-                  className={style.backToLoginBtn}
-                >
-                  Back to Sign In
-                </button>
-              </form>
-            ) : (
-              <div>
-                <h3>Check your email</h3>
-                <p>Reset link sent to {email}</p>
-
-                <button
+                  className={style.submitBtn}
+                  style={{ marginBottom: "0.5rem" }}
                   onClick={() => {
                     onClose();
                     navigate("/reset-password");
                   }}
                 >
-                  Continue
+                  Enter Code Manually
+                </button>
+
+                <button
+                  type="button"
+                  className={style.backToLoginBtn}
+                  style={{ width: "100%", background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "0.875rem", marginTop: "0.5rem" }}
+                  onClick={() => {
+                    setView("auth");
+                    setForgotSuccess(false);
+                    setEmail("");
+                    setErrorMessage("");
+                  }}
+                >
+                  Back to Sign In
                 </button>
               </div>
             )}
           </>
         ) : (
           <>
-            <img src={logoIcon} className={style.logoImg} />
-            <h2>NTUConnect</h2>
+            <img src={logoIcon} className={style.logoImg} alt="NTUConnect Logo" />
+            <h2 className={style.title}>NTUConnect</h2>
+            <p className={style.subtitle}>
+              {isSignUp
+                ? "Create your student account to connect with mentors."
+                : "Sign in to your student account to connect with mentors."}
+            </p>
 
-            <div>
-              <button onClick={() => setIsSignUp(false)}>Sign In</button>
-              <button onClick={() => setIsSignUp(true)}>Sign Up</button>
+            {/* Tab Switcher */}
+            <div className={style.tabContainer}>
+              <button
+                type="button"
+                className={`${style.tab} ${!isSignUp ? style.activeTab : style.inactiveTab}`}
+                onClick={() => {
+                  setIsSignUp(false);
+                  setErrorMessage("");
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className={`${style.tab} ${isSignUp ? style.activeTab : style.inactiveTab}`}
+                onClick={() => {
+                  setIsSignUp(true);
+                  setErrorMessage("");
+                }}
+              >
+                Sign Up
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className={style.form}>
-              <input
-                className={style.input}
-                type="email"
-                placeholder="23ntucsfl1002@student.ntu.edu.pk"
-                value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setEmail(e.target.value)
-                }
-                required
-              />
-
-              <div className={style.passwordWrapper}>
+              <div className={style.inputGroup}>
+                <label className={style.label}>Student Email</label>
                 <input
                   className={style.input}
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
+                  type="email"
+                  placeholder="23ntucsfl1003@student.ntu.edu.pk"
+                  value={email}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setPassword(e.target.value)
+                    setEmail(e.target.value)
                   }
+                  autoComplete="email"
                   required
                 />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((p) => !p)}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
 
-              {errorMessage && (
-                <p className={style.error}>{errorMessage}</p>
-              )}
-
-              <button className={style.submitBtn} disabled={loading}>
-                {loading
-                  ? "Loading..."
-                  : isSignUp
-                    ? "Create Account"
-                    : "Sign In"}
-              </button>
+              <div className={style.inputGroup}>
+                <label className={style.label}>Password</label>
+                <div className={style.passwordWrapper}>
+                  <input
+                    className={`${style.input} ${style.passwordInput}`}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••••••••••••••••••"
+                    value={password}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setPassword(e.target.value)
+                    }
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                    required
+                  />
+                  <button
+                    className={style.togglePassword}
+                    type="button"
+                    onClick={() => setShowPassword((p) => !p)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {errorMessage && <p className={style.error}>{errorMessage}</p>}
+                {!isSignUp && (
+                  <div style={{ textAlign: "right", marginTop: "0.5rem" }}>
+                    <button
+                      type="button"
+                      className={style.forgotLink}
+                      onClick={() => {
+                        setView("forgot");
+                        setErrorMessage("");
+                        setForgotSuccess(false);
+                      }}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <button
-                type="button"
-                onClick={() => {
-                  setView("forgot");
-                  setErrorMessage("");
-                  setForgotSuccess(false);
-                }}
-                className={style.backToLoginBtn}
+                className={style.submitBtn}
+                type="submit"
+                disabled={loading}
               >
-                Forgot Password?
+                {loading ? (
+                  <span className={style.spinner}></span>
+                ) : isSignUp ? (
+                  "Create Account"
+                ) : (
+                  "Sign In"
+                )}
               </button>
+
+              <div className={style.footer}>
+                <span>
+                  {isSignUp ? "Already have an account?" : "Don't have an account?"}
+                </span>
+                <button
+                  type="button"
+                  className={style.footerBtn}
+                  onClick={() => {
+                    setIsSignUp((p) => !p);
+                    setErrorMessage("");
+                  }}
+                >
+                  {isSignUp ? "Sign In" : "Sign Up"}
+                </button>
+              </div>
             </form>
           </>
         )}
