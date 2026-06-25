@@ -28,12 +28,12 @@ function Auth({ onClose }: Props) {
     setLoading(true);
     setErrorMessage("");
 
-    // ✅ REMOVE ALL SPACES (prevents user bypass issues)
+    // remove spaces
     const cleanEmail = email.replace(/\s/g, "");
 
-    // ✅ NTU EMAIL FORMAT VALIDATION
+    // ✅ UPDATED NTU FORMAT: cs OR ct
     const isValidStudentEmail =
-      /^[0-9]{2}ntu(cs|cet)[a-z]*[0-9]+@student\.ntu\.edu\.pk$/i.test(
+      /^[0-9]{2}ntu(cs|ct)[a-z]*[0-9]+@student\.ntu\.edu\.pk$/i.test(
         cleanEmail
       );
 
@@ -60,7 +60,6 @@ function Auth({ onClose }: Props) {
         return;
       }
 
-      // If email already exists
       if (
         data.user &&
         data.user.identities &&
