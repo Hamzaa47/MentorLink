@@ -67,6 +67,29 @@ const subjects = [
   "Professional Practices",
   "Probability and Statistics",
   "Introduction to Textiles",
+
+  "Applied Physics",
+  "Islamic Studies",
+  "Electric Circuits",
+  "Computer Programming",
+  "Electronic Devices and Circuits",
+  "Technical Drawing",
+  "Communication Skills",
+  "Signals and Systems",
+  "Computer Hardware Systems",
+  "Instrumentation and Data Acquisition",
+  "Web Technologies",
+  "Mobile Application Development",
+  "Embedded IoT Systems",
+  "Systems and Network Administration",
+  "Network Technologies",
+  "Organizational Behavior",
+  "Network Switching and Routing",
+  "Blockchain Technology",
+  "Machine Learning and Data Analytics",
+  "HCI Technologies",
+  "Technopreneurship",
+  "Supervised Industrial Training"
 ];
 
 function SubjectSearch({ onChange, initialSubjects = [], maxSubjects = 100 }: Props) {

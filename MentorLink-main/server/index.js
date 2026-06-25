@@ -102,10 +102,10 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 
   // Enforce student email regex on backend to prevent hacker bypass
-  const regex = /^(2[0-9])ntucsfl\d{4}@student\.ntu\.edu\.pk$/;
+  const regex = /^(2[0-9])ntu(cs|ct)fl\d{4}@student\.ntu\.edu\.pk$/i;
   if (!regex.test(email)) {
     return res.status(400).json({
-      error: "Invalid email format. Use: 23ntucsfl1003@student.ntu.edu.pk"
+      error: "Invalid email format. Use: 23ntu(cs|ct)fl1003@student.ntu.edu.pk"
     });
   }
 
@@ -124,10 +124,10 @@ app.post("/api/auth/signup", async (req, res) => {
     if (checkError) {
       if (checkError.code === "PGRST202" || (checkError.message && checkError.message.includes("Could not find the function"))) {
         console.warn("\n========================================================================\n" +
-                     "⚠️  WARNING: Duplicate email check on signup is currently DISABLED!\n" +
-                     "Please run the SQL migration in 'server/check_email_exists.sql' in your\n" +
-                     "Supabase Dashboard > SQL Editor to enable this validation.\n" +
-                     "========================================================================\n");
+          "⚠️  WARNING: Duplicate email check on signup is currently DISABLED!\n" +
+          "Please run the SQL migration in 'server/check_email_exists.sql' in your\n" +
+          "Supabase Dashboard > SQL Editor to enable this validation.\n" +
+          "========================================================================\n");
       } else {
         console.warn("check_email_exists RPC error:", checkError.message);
       }
@@ -448,10 +448,10 @@ async function runChatCleanupIfNeeded(supabaseClient) {
     if (error) {
       if (error.code === "PGRST202" || (error.message && error.message.includes("Could not find the function"))) {
         console.warn("\n========================================================================\n" +
-                     "⚠️  WARNING: Automatic chat cleanup is currently DISABLED!\n" +
-                     "Please run the SQL migration in 'server/delete_expired_chats.sql' in your\n" +
-                     "Supabase Dashboard > SQL Editor to enable this feature.\n" +
-                     "========================================================================\n");
+          "⚠️  WARNING: Automatic chat cleanup is currently DISABLED!\n" +
+          "Please run the SQL migration in 'server/delete_expired_chats.sql' in your\n" +
+          "Supabase Dashboard > SQL Editor to enable this feature.\n" +
+          "========================================================================\n");
       } else {
         console.warn("delete_expired_chats RPC error:", error.message);
       }
