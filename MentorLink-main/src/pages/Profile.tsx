@@ -124,7 +124,7 @@ function Profile() {
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (difficultSubjects.length < 3) {
+    if (difficultSubjects.length !== 3) {
       setFormError("Please select at least 3 difficult subjects to continue.");
       return;
     }
@@ -250,9 +250,14 @@ function Profile() {
             <label className={style["input-heading"]}>Difficult Subjects</label>
             <div className={style.wrapper}>
               <SubjectSearch onChange={(subjects) => {
+                if (subjects.length > 3) {
+                  setFormError("You can only select exactly 3 subjects.");
+                  return;
+                }
+
                 setDifficultSubjects(subjects);
-                // Clear warning as soon as user selects 3+
-                if (subjects.length >= 3) {
+
+                if (subjects.length === 3) {
                   setFormError("");
                 }
               }} />
